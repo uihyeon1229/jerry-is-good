@@ -4,6 +4,21 @@
 >
 > 최종 업데이트: 2026-04-21
 
+## 📂 문서 인덱스
+
+| 파일 | 내용 | 대상 독자 |
+|------|------|---------|
+| **README.md** | 전체 개요 (이 문서) | **전원 먼저 읽기** |
+| [01-strategy.md](./01-strategy.md) | 전략 배경 및 근거 | 전원 |
+| [02-architecture.md](./02-architecture.md) | 전체 아키텍처 다이어그램 + 파일 구조 | A, B 담당 |
+| [03-schema.md](./03-schema.md) | 데이터 스키마, Judge 루브릭, Guardrails/Curator 설정 | B, C 담당 |
+| [04-roles-timeline.md](./04-roles-timeline.md) | 4인 역할 + 시간대별 상세 타임라인 | **전원 필수** |
+| [05-pre-checklist.md](./05-pre-checklist.md) | 대회 전 준비 체크리스트 | **전원 필수** |
+| [06-presentation-outline.md](./06-presentation-outline.md) | 발표 15슬라이드 초안 + 예상 Q&A | D 담당 |
+| [07-wsl-setup.md](./07-wsl-setup.md) | **WSL 환경 세팅 (Brev는 WSL 전용)** | **전원 필수** |
+
+> ⚠️ **Brev CLI가 WSL에서만 제대로 작동함**이 확인되어, 전원 **WSL2 + Ubuntu 22.04** 환경 통일 필수. 상세: [07-wsl-setup.md](./07-wsl-setup.md)
+
 ## 📌 목차
 1. [대회 개요](#1-대회-개요)
 2. [우리 팀 전략](#2-우리-팀-전략)
@@ -262,6 +277,19 @@
 
 ### ✅ 체크리스트
 
+#### [0] WSL2 환경 세팅 ⚠️ **전원 필수, 최우선**
+- **왜**: Brev CLI가 **Windows 네이티브에서 정상 동작 안 함**. WSL2 전용 대응.
+- **누가**: 전원 (Windows 사용자 한정)
+- **어디**: 본인 로컬 PC → WSL2 Ubuntu 22.04
+- **소요**: 30분~1시간 (드라이버/CUDA 포함)
+- **상세 가이드**: **[07-wsl-setup.md](./07-wsl-setup.md)**
+- **핵심 체크**:
+  - [ ] `wsl -l -v` → Ubuntu-22.04 설치
+  - [ ] WSL 내부에서 `nvidia-smi` GPU 정보 출력
+  - [ ] Brev CLI 설치 + `brev login` 성공
+  - [ ] Node.js 20+ 설치 (MCP용)
+  - [ ] VSCode Remote - WSL 확장
+
 #### [1] 법제처 Open API 키 발급 (1분, 무료)
 - **누가**: 누구든 1명 (C 담당이 이상적)
 - **어디서**: https://open.law.go.kr/LSO/openApi/guideList.do
@@ -278,14 +306,9 @@
 
 #### [3] Korean Law MCP 로컬 테스트 (10분)
 - **누가**: B 또는 C 담당
-- **어디서**: 본인 로컬 PC (Mac/Windows/Linux)
+- **어디서**: **WSL 터미널** (Ubuntu)
 - **명령**:
   ```bash
-  # Windows PowerShell
-  $env:LAW_OC="발급받은키"
-  npx korean-law-mcp "소득세법 제20조"
-
-  # Mac/Linux
   export LAW_OC=발급받은키
   npx korean-law-mcp "소득세법 제20조"
   ```
