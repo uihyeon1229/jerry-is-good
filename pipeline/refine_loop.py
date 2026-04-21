@@ -23,6 +23,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
 from .builder import build_config
+from .checkpoint import Checkpoint
 from .providers import vllm_provider
 from .validators.citation_validator import (
     DEFAULT_URL as MCP_URL,
