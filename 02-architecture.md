@@ -94,17 +94,17 @@
 │                         ▼                                      │
 │  ┌─────────────────────────────────────────────────────────┐  │
 │  │  NeMo Framework (SFT)                                   │  │
-│  │    • 대상: Qwen/Qwen2.5-1.5B-Instruct                   │  │
-│  │    • 기법: LoRA (r=16, alpha=32)                        │  │
+│  │    • 대상: Nemotron 3 Nano 30B FP8 (LoRA)                │  │
+│  │    • 기법: LoRA (r=16, alpha=32)                        ���  │
 │  │    • 학습 시간: 4~6시간 on 1x H100                      │  │
-│  │    • 배치 크기: 8, grad accum 4                         │  │
-│  │    • epoch: 3, lr: 2e-5                                 │  │
+│  │    • 배치 크기: 2, grad accum 16                        │  │
+│  │    • epoch: 3, lr: 1e-5                                 │  │
 │  └─────────────────────────────────────────────────────────┘  │
 │                         │                                      │
 │                         ▼                                      │
 │  ┌─────────────────────────────────────────────────────────┐  │
 │  │  Benchmark Runner                                       │  │
-│  │    • 20문제 × (Base vs SFT'd)                           │  │
+│  │    • 20문제 × (Base vs SFT'd Nemotron Nano)              │  │
 │  │    • Judge: Nemotron 3 Nano (자체 평가)                 │  │
 │  │    • 정답 교차검증: MCP search_law                       │  │
 │  │    • Nsight: GPU 사용률 프로파일 캡처                    │  │
@@ -194,7 +194,7 @@ Judge 모델:
 │   ├── eval.jsonl
 │   └── full.parquet
 ├── training/
-│   ├── sft_qwen_1.5b.py
+│   ├── sft_nemotron_nano_lora.py
 │   └── checkpoints/
 └── benchmark/
     ├── questions.jsonl           # 20문제

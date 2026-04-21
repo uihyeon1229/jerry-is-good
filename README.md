@@ -107,7 +107,7 @@
 | 4 | **NeMo Data Designer** | 스키마 기반 합성 파이프라인 |
 | 5 | **NeMo Curator** | 중복제거 + 품질필터 + PII 제거 |
 | 6 | **NeMo Guardrails** | 탈세 조력/법률 탈선 차단 |
-| 7 | **NeMo Framework (SFT)** | 소형 모델 파인튜닝 |
+| 7 | **NeMo Framework (SFT)** | Nemotron 3 Nano LoRA 파인튜닝 |
 | 8 | **NVIDIA Build API / Nsight** | 비교 검증 + GPU 프로파일 증빙 |
 
 ### 🔶 외부 통합
@@ -116,7 +116,6 @@
 |------|------|
 | **Korean Law MCP** (`chrisryugj/korean-law-mcp`) | 법제처 공식 조문/판례 조회 + `verify_citations` 환각 검증 |
 | **법제처 Open API** | MCP 데이터 소스 (무료 OC 키 1분 발급) |
-| **Qwen2.5-1.5B** | SFT 대상 모델 (한국어 OK, 학습 4~6시간) |
 
 ---
 
@@ -157,7 +156,7 @@
 │ Day1 밤 ~ Day2 새벽: 학습 (백그라운드)                  │
 │                                                         │
 │  NeMo Framework SFT                                     │
-│    대상: Qwen2.5-1.5B (LoRA)                            │
+│    대상: Nemotron 3 Nano 30B FP8 (LoRA)                 │
 │    입력: ChatML messages                                │
 │    학습 시간: 4~6시간                                    │
 └─────────────────────────────────────────────────────────┘
@@ -258,7 +257,7 @@
 | 12:00–14:00 | 점심 + 첫 통합 (Sampler→LLMText 5건 미리보기) | 전원 |
 | 14:00–18:00 | 본 파이프라인 완성 + Curator/Guardrails/MCP verify 연결 | 전원 |
 | 18:00–22:00 | **500~1000건 본 생성** (백그라운드) + 품질 검수 / 발표 초안 | 전원 |
-| 22:00–       | **SFT 학습 시작** (Qwen2.5-1.5B, 백그라운드 밤샘) | A |
+| 22:00–       | **SFT 학습 시작** (Nemotron 3 Nano LoRA, 백그라운드 밤샘) | A |
 
 ### Day 2
 
@@ -317,7 +316,7 @@
 #### [4] HuggingFace 계정 + 토큰 발급 (5분)
 - **누가**: A 담당
 - **어디서**: https://huggingface.co/settings/tokens
-- **목적**: Nemotron 3 Nano 모델 다운로드 + Qwen2.5-1.5B 다운로드
+- **목적**: Nemotron 3 Nano 모델 다운로드 + Nemotron 3 Nano 30B (LoRA) 다운로드
 - **권한**: Read 권한으로 충분
 
 #### [5] 팀 공용 저장소 준비 (5분)
@@ -356,7 +355,7 @@
 | **Data Designer** | "스키마 선언만으로 세목 × 질문유형 × 난이도 × N 조합 자동 생성" |
 | **NeMo Curator** | "의미적 중복 X%, 저품질 Y% 제거" (수치 제시) |
 | **NeMo Guardrails** | "탈세 조력 표현 Z건 자동 차단" |
-| **NeMo Framework SFT** | "Qwen2.5-1.5B Before/After 벤치마크 점수 N% 상승" |
+| **NeMo Framework SFT** | "Nemotron 3 Nano Before/After 벤치마크 점수 N% 상승" |
 | **Brev.dev** | "30분만에 H100 세팅 완료, 크레딧 효율 최적화" |
 | **Korean Law MCP** | "법제처 공식 조문 기반, verify_citations로 환각 사전 차단" |
 
@@ -405,6 +404,7 @@
 3. **시각적 임팩트** — 점수 차트 하나로 성과 어필
 
 리스크: SFT 실패 시 발표 구성 깨짐 → **A 담당자 전담 + 백업 플랜 (발표에서 "시도했으나 시간 부족" 솔직히 언급)**.
+> SFT 대상: Nemotron 3 Nano 30B FP8 (LoRA) — NVIDIA 모델로 생성하고, 같은 NVIDIA 모델을 파인튜닝하는 풀루프 전략.
 
 ### B. 1박 2일에 현실적인가?
 
