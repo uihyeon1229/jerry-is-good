@@ -113,9 +113,12 @@ def question_column() -> LLMTextColumnConfig:
 
 
 @custom_column_generator(required_columns=["세목"])
-def _seed_context_generator(row: dict) -> str:
-    """L1 — 세목별 실제 조문 Top-N을 프롬프트 context로 주입."""
-    return seed_context_for(row.get("세목") or "")
+def _seed_context_generator(row: dict) -> dict:
+    """L1 — 세목별 실제 조문 Top-N을 프롬프트 context로 주입.
+
+    DD custom generator 규약: 기존 row 전체 + 새 컬럼(seed_context) dict 반환.
+    """
+    return {**row, "seed_context": seed_context_for(row.get("세목") or "")}
 
 
 def seed_context_column() -> CustomColumnConfig:
