@@ -19,7 +19,8 @@
 | [08-pipeline-plan.md](./08-pipeline-plan.md) | Smoke Test 결과 + 스켈레톤 파이프라인 계획 (v1) | A, B |
 | [09-pipeline-design-v2.md](./09-pipeline-design-v2.md) | **차별화 5레버 확정판 (L1~L5) + 실전 설계** | **전원 필수** |
 | [10-architecture-overview.md](./10-architecture-overview.md) | **발표 PPT 초안 (15슬라이드 구성 + 실측 수치)** | **D 담당 + 전원** |
-| [11-pipeline-advanced.md](./11-pipeline-advanced.md) | **v3 고도화 9종 (루프·교차검증·페르소나 매칭·캐시·복구)** | **B 담당** |
+| [11-pipeline-advanced.md](./11-pipeline-advanced.md) | **v3 고도화 9종 + 스택 3종 확장 (총 12종)** | **B 담당** |
+| [12-presentation-final.md](./12-presentation-final.md) | **발표 최종 오버뷰 (단일 소스, 스택 12종·3단 비교·데모 스크립트)** | **D 담당 + 전원** |
 
 > ⚠️ **Brev CLI가 WSL에서만 제대로 작동함**이 확인되어, 전원 **WSL2 + Ubuntu 22.04** 환경 통일 필수. 상세: [07-wsl-setup.md](./07-wsl-setup.md)
 
