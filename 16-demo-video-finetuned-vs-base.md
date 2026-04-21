@@ -214,7 +214,70 @@ vLLM 기동 로그에 "lora not supported for NemotronH" 같은 경고/에러가
 
 ---
 
-## 9. 레퍼런스
+## 9. 발표자 핸드오프 패키지
+
+### 9.1 현재 서빙 상태 (2026-04-22 07:00 KST 기준)
+- **vLLM 세션**: Brev 인스턴스 `jerryisgood-h100-80gib-vram-sxm5`, tmux 세션 `vllm_demo`
+- **포트**: 5000 (OpenAI-compatible, `/v1/chat/completions`, `/v1/models`)
+- **로드된 모델**: `nemotron-base` (원본), `tax_lora` (우리 SFT 어댑터, parent=nemotron-base)
+- **기동 로그**: `/ephemeral/training_logs/vllm_demo.log`
+- **최종 어댑터 경로**: `/ephemeral/training_checkpoints/tax_cot_lora_v2/final`
+
+### 9.2 로컬(발표자 PC)에서 접속
+```bash
+# 1. Brev 포트포워딩
+brev port-forward jerryisgood-h100-80gib-vram-sxm5 -p 5000:5000 -p 8600:8600
+
+# 2. health check
+curl http://localhost:5000/v1/models | jq '.data[].id'
+# 기대: "nemotron-base" "tax_lora"
+
+# 3-A. CLI 간단 비교
+bash demo/ask_compare.sh "부가세 면세 재화 범위?"
+
+# 3-B. Streamlit 좌/우 분할 (권장)
+pip install streamlit openai
+streamlit run demo/app_compare.py --server.port 8600 --server.address 0.0.0.0
+# 브라우저: http://localhost:8600
+```
+
+### 9.3 시연 질문 세트
+`demo/demo_questions.txt` 참조. 7종, 권장 순서 1 → 2 → 3 → 7 → 4 → 5 → 6.
+
+### 9.4 녹화 체크리스트
+- [ ] Brev 포트포워딩 살아있음 (`curl /v1/models` 성공)
+- [ ] `max_tokens ≥ 1500`, `temperature = 0.3` (Streamlit sidebar에서 조정)
+- [ ] Warm-up: `"hello"` 를 base/tax_lora 각각 1회 호출 (첫 호출 5~15초 지연)
+- [ ] 녹화 시 화면 좌/우 분할 → 동시 생성 과정 포착
+- [ ] 질문당 2회 녹화(흔들림 대비), 차이 큰 컷 채택
+- [ ] thinking trace(`<think>...</think>`)는 편집 컷팅 대상
+- [ ] 시연 중 다른 누가 vLLM kill할 수 있음 → `vllm_demo` 세션 살아있는지 주기 확인
+
+### 9.5 장애 시 복구 명령
+```bash
+# vLLM 세션 죽었을 때 재기동
+brev exec jerryisgood-h100-80gib-vram-sxm5 "
+tmux kill-session -t vllm_demo 2>/dev/null
+tmux new -d -s vllm_demo 'bash /home/shadeform/jerry-is-good/scripts/launch_vllm_demo.sh'
+"
+# (scripts/launch_vllm_demo.sh 가 없으면 §2.1 명령을 그대로 쓰면 됨)
+```
+
+### 9.6 발표자가 만졌을 때 안 만졌으면 좋겠는 것
+- ❌ `/ephemeral/training_checkpoints/tax_cot_lora_v2/final/` 파일 수정·삭제
+- ❌ tmux `sft` 세션 (이미 종료됐지만 혹시 남아있다면)
+- ❌ `/home/shadeform/track3/` venv에 새 pip install (ABI 충돌 위험)
+- ✅ Streamlit port 8600, vLLM port 5000 만 사용
+- ✅ 필요 시 vllm_demo 세션 pane 들어가서 `Ctrl+B → d` 로 detach (kill 금지)
+
+### 9.7 동시 작업 조율
+- 우리(개발자) 벤치마크 실행과 발표자 녹화가 **동일 vLLM 엔드포인트** 공유
+- **녹화 중에는 벤치마크 요청 일시 중단** (레이턴시 흔들림 방지)
+- 녹화 끝난 뒤 알려주면 벤치마크 재개
+
+---
+
+## 10. 레퍼런스
 
 - vLLM LoRA 가이드: https://docs.vllm.ai/en/latest/models/lora.html
 - Nemotron-H Serving 공식: https://docs.nvidia.com/nemotron/nightly/nemotron/nano3/README.html
