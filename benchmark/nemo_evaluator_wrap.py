@@ -56,56 +56,49 @@ def build_result(report: dict) -> EvaluationResult:
     """우리 score_judge.py 출력 dict → EvaluationResult."""
     rows = report.get("rows", [])
 
-    # Before (Base Nemotron) task
+    def _opt(key: str) -> list[float]:
+        return [r[key] for r in rows if r.get(key) is not None]
+
+    # Before (Base Nemotron) — 1순위 주 지표 + 2순위 독립 평가자 + 보조
     before_task = TaskResult(
         metrics={
-            "valid_ratio": MetricResult(
-                scores={
-                    "base": _score_from_values([r["before_valid_ratio"] for r in rows])
-                }
-            ),
-            "hallucination_rate": MetricResult(
-                scores={
-                    "base": _score_from_values(
-                        [1.0 if r["before_halluc"] else 0.0 for r in rows]
-                    )
-                }
-            ),
+            # ★ 1순위
             "expected_law_coverage": MetricResult(
-                scores={
-                    "base": _score_from_values(
-                        [r["before_expected_law_cov"] for r in rows]
-                    )
-                }
+                scores={"base": _score_from_values([r["before_expected_law_cov"] for r in rows])}
             ),
             "keyword_coverage": MetricResult(
                 scores={"base": _score_from_values([r["before_kw_cov"] for r in rows])}
             ),
+            # ★ 2순위 독립 평가자
+            "cross_overlap_super120b": MetricResult(
+                scores={"base": _score_from_values(_opt("before_cross_overlap"))}
+            ),
+            # 보조
+            "valid_ratio_L2_aux": MetricResult(
+                scores={"base": _score_from_values([r["before_valid_ratio_L2"] for r in rows])}
+            ),
+            "hallucination_rate_L2_aux": MetricResult(
+                scores={"base": _score_from_values([1.0 if r.get("before_halluc_L2") else 0.0 for r in rows])}
+            ),
         }
     )
 
-    # After (SFT'd) task
     after_task = TaskResult(
         metrics={
-            "valid_ratio": MetricResult(
-                scores={
-                    "sft": _score_from_values([r["after_valid_ratio"] for r in rows])
-                }
-            ),
-            "hallucination_rate": MetricResult(
-                scores={
-                    "sft": _score_from_values(
-                        [1.0 if r["after_halluc"] else 0.0 for r in rows]
-                    )
-                }
-            ),
             "expected_law_coverage": MetricResult(
-                scores={
-                    "sft": _score_from_values([r["after_expected_law_cov"] for r in rows])
-                }
+                scores={"sft": _score_from_values([r["after_expected_law_cov"] for r in rows])}
             ),
             "keyword_coverage": MetricResult(
                 scores={"sft": _score_from_values([r["after_kw_cov"] for r in rows])}
+            ),
+            "cross_overlap_super120b": MetricResult(
+                scores={"sft": _score_from_values(_opt("after_cross_overlap"))}
+            ),
+            "valid_ratio_L2_aux": MetricResult(
+                scores={"sft": _score_from_values([r["after_valid_ratio_L2"] for r in rows])}
+            ),
+            "hallucination_rate_L2_aux": MetricResult(
+                scores={"sft": _score_from_values([1.0 if r.get("after_halluc_L2") else 0.0 for r in rows])}
             ),
         }
     )
@@ -119,11 +112,11 @@ def build_result(report: dict) -> EvaluationResult:
     for s, rs in by_semok.items():
         semok_groups[s] = GroupResult(
             metrics={
-                "before_valid": MetricResult(
-                    scores={"base": _score_from_values([r["before_valid_ratio"] for r in rs])}
+                "before_expected_law": MetricResult(
+                    scores={"base": _score_from_values([r["before_expected_law_cov"] for r in rs])}
                 ),
-                "after_valid": MetricResult(
-                    scores={"sft": _score_from_values([r["after_valid_ratio"] for r in rs])}
+                "after_expected_law": MetricResult(
+                    scores={"sft": _score_from_values([r["after_expected_law_cov"] for r in rs])}
                 ),
             }
         )

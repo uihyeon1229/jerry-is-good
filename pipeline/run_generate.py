@@ -20,13 +20,23 @@ from .settings import ensure_dirs, settings
 
 
 def _records(result) -> list[dict]:
+    """PreviewResults.dataset 또는 DatasetCreationResults.load_dataset() 양쪽 지원."""
+    # Preview 모드
     ds = getattr(result, "dataset", None)
-    if ds is None:
-        return []
-    try:
-        return ds.to_dict(orient="records")
-    except AttributeError:
-        return list(ds)
+    if ds is not None:
+        try:
+            return ds.to_dict(orient="records")
+        except AttributeError:
+            return list(ds)
+    # Create 모드
+    loader = getattr(result, "load_dataset", None)
+    if callable(loader):
+        try:
+            df = loader()
+            return df.to_dict(orient="records")
+        except Exception as e:  # noqa: BLE001
+            print(f"!! load_dataset failed: {e}", flush=True)
+    return []
 
 
 def main() -> None:
