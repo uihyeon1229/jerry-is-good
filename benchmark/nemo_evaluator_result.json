@@ -1,0 +1,527 @@
+{
+  "tasks": {
+    "korean_law_cot_before": {
+      "metrics": {
+        "expected_law_coverage": {
+          "scores": {
+            "base": {
+              "value": 0.45833333333333337,
+              "stats": {
+                "count": 20,
+                "sum": 9.166666666666668,
+                "sum_squared": 7.694444444444445,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": 0.45833333333333337,
+                "variance": 0.17465277777777777,
+                "stddev": 0.4179147972706611,
+                "stderr": 0.09344858955002418
+              }
+            }
+          }
+        },
+        "keyword_coverage": {
+          "scores": {
+            "base": {
+              "value": 0.5416666666666666,
+              "stats": {
+                "count": 20,
+                "sum": 10.833333333333332,
+                "sum_squared": 7.138888888888889,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": 0.5416666666666666,
+                "variance": 0.06354166666666672,
+                "stddev": 0.252074724370903,
+                "stderr": 0.0563656219102862
+              }
+            }
+          }
+        },
+        "cross_overlap_super120b": {
+          "scores": {
+            "base": {
+              "value": 0.10166666666666666,
+              "stats": {
+                "count": 20,
+                "sum": 2.033333333333333,
+                "sum_squared": 0.9011111111111112,
+                "min": 0.0,
+                "max": 0.5,
+                "mean": 0.10166666666666666,
+                "variance": 0.03471944444444445,
+                "stddev": 0.18633154441598032,
+                "stderr": 0.04166499996666533
+              }
+            }
+          }
+        },
+        "valid_ratio_L2_aux": {
+          "scores": {
+            "base": {
+              "value": 0.3681944444444445,
+              "stats": {
+                "count": 20,
+                "sum": 7.36388888888889,
+                "sum_squared": 2.94001244016125,
+                "min": 0.16666666666666666,
+                "max": 0.5555555555555556,
+                "mean": 0.3681944444444445,
+                "variance": 0.01143347308830936,
+                "stddev": 0.10692741972155392,
+                "stderr": 0.02390969791560462
+              }
+            }
+          }
+        },
+        "hallucination_rate_L2_aux": {
+          "scores": {
+            "base": {
+              "value": 0.0,
+              "stats": {
+                "count": 20,
+                "sum": 0.0,
+                "sum_squared": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "variance": 0.0,
+                "stddev": 0.0,
+                "stderr": 0.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "korean_law_cot_after": {
+      "metrics": {
+        "expected_law_coverage": {
+          "scores": {
+            "sft": {
+              "value": 0.45833333333333337,
+              "stats": {
+                "count": 20,
+                "sum": 9.166666666666668,
+                "sum_squared": 7.694444444444445,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": 0.45833333333333337,
+                "variance": 0.17465277777777777,
+                "stddev": 0.4179147972706611,
+                "stderr": 0.09344858955002418
+              }
+            }
+          }
+        },
+        "keyword_coverage": {
+          "scores": {
+            "sft": {
+              "value": 0.525,
+              "stats": {
+                "count": 20,
+                "sum": 10.5,
+                "sum_squared": 7.083333333333334,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": 0.525,
+                "variance": 0.07854166666666668,
+                "stddev": 0.2802528620133373,
+                "stderr": 0.06266644503506907
+              }
+            }
+          }
+        },
+        "cross_overlap_super120b": {
+          "scores": {
+            "sft": {
+              "value": 0.09166666666666666,
+              "stats": {
+                "count": 20,
+                "sum": 1.8333333333333333,
+                "sum_squared": 0.8055555555555556,
+                "min": 0.0,
+                "max": 0.5,
+                "mean": 0.09166666666666666,
+                "variance": 0.031875,
+                "stddev": 0.17853571071357124,
+                "stderr": 0.039921798556678274
+              }
+            }
+          }
+        },
+        "valid_ratio_L2_aux": {
+          "scores": {
+            "sft": {
+              "value": 0.41089285714285706,
+              "stats": {
+                "count": 20,
+                "sum": 8.217857142857142,
+                "sum_squared": 3.701466206853112,
+                "min": 0.2,
+                "max": 0.75,
+                "mean": 0.41089285714285706,
+                "variance": 0.016240370291635248,
+                "stddev": 0.12743771141869759,
+                "stderr": 0.028495938562920896
+              }
+            }
+          }
+        },
+        "hallucination_rate_L2_aux": {
+          "scores": {
+            "sft": {
+              "value": 0.0,
+              "stats": {
+                "count": 20,
+                "sum": 0.0,
+                "sum_squared": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "variance": 0.0,
+                "stddev": 0.0,
+                "stderr": 0.0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "groups": {
+    "by_semok": {
+      "groups": {
+        "세법-소득세": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.75,
+                  "stats": {
+                    "count": 2,
+                    "sum": 1.5,
+                    "sum_squared": 1.25,
+                    "min": 0.5,
+                    "max": 1.0,
+                    "mean": 0.75,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.75,
+                  "stats": {
+                    "count": 2,
+                    "sum": 1.5,
+                    "sum_squared": 1.25,
+                    "min": 0.5,
+                    "max": 1.0,
+                    "mean": 0.75,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            }
+          }
+        },
+        "세법-법인세": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.75,
+                  "stats": {
+                    "count": 2,
+                    "sum": 1.5,
+                    "sum_squared": 1.25,
+                    "min": 0.5,
+                    "max": 1.0,
+                    "mean": 0.75,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.75,
+                  "stats": {
+                    "count": 2,
+                    "sum": 1.5,
+                    "sum_squared": 1.25,
+                    "min": 0.5,
+                    "max": 1.0,
+                    "mean": 0.75,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            }
+          }
+        },
+        "세법-부가가치세": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.0,
+                  "stats": {
+                    "count": 2,
+                    "sum": 0.0,
+                    "sum_squared": 0.0,
+                    "min": 0.0,
+                    "max": 0.0,
+                    "mean": 0.0,
+                    "variance": 0.0,
+                    "stddev": 0.0,
+                    "stderr": 0.0
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.0,
+                  "stats": {
+                    "count": 2,
+                    "sum": 0.0,
+                    "sum_squared": 0.0,
+                    "min": 0.0,
+                    "max": 0.0,
+                    "mean": 0.0,
+                    "variance": 0.0,
+                    "stddev": 0.0,
+                    "stderr": 0.0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "세법-상속증여세": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.25,
+                  "stats": {
+                    "count": 2,
+                    "sum": 0.5,
+                    "sum_squared": 0.25,
+                    "min": 0.0,
+                    "max": 0.5,
+                    "mean": 0.25,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.25,
+                  "stats": {
+                    "count": 2,
+                    "sum": 0.5,
+                    "sum_squared": 0.25,
+                    "min": 0.0,
+                    "max": 0.5,
+                    "mean": 0.25,
+                    "variance": 0.0625,
+                    "stddev": 0.25,
+                    "stderr": 0.17677669529663687
+                  }
+                }
+              }
+            }
+          }
+        },
+        "민법-계약임대차": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.38888888888888884,
+                  "stats": {
+                    "count": 3,
+                    "sum": 1.1666666666666665,
+                    "sum_squared": 0.6944444444444444,
+                    "min": 0.0,
+                    "max": 0.6666666666666666,
+                    "mean": 0.38888888888888884,
+                    "variance": 0.08024691358024696,
+                    "stddev": 0.28327886186626594,
+                    "stderr": 0.16355112715421946
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.38888888888888884,
+                  "stats": {
+                    "count": 3,
+                    "sum": 1.1666666666666665,
+                    "sum_squared": 0.6944444444444444,
+                    "min": 0.0,
+                    "max": 0.6666666666666666,
+                    "mean": 0.38888888888888884,
+                    "variance": 0.08024691358024696,
+                    "stddev": 0.28327886186626594,
+                    "stderr": 0.16355112715421946
+                  }
+                }
+              }
+            }
+          }
+        },
+        "민법-상속증여": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.16666666666666666,
+                  "stats": {
+                    "count": 3,
+                    "sum": 0.5,
+                    "sum_squared": 0.25,
+                    "min": 0.0,
+                    "max": 0.5,
+                    "mean": 0.16666666666666666,
+                    "variance": 0.05555555555555555,
+                    "stddev": 0.23570226039551584,
+                    "stderr": 0.13608276348795434
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.16666666666666666,
+                  "stats": {
+                    "count": 3,
+                    "sum": 0.5,
+                    "sum_squared": 0.25,
+                    "min": 0.0,
+                    "max": 0.5,
+                    "mean": 0.16666666666666666,
+                    "variance": 0.05555555555555555,
+                    "stddev": 0.23570226039551584,
+                    "stderr": 0.13608276348795434
+                  }
+                }
+              }
+            }
+          }
+        },
+        "노동법-임금퇴직금": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 0.3333333333333333,
+                  "stats": {
+                    "count": 3,
+                    "sum": 1.0,
+                    "sum_squared": 1.0,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "mean": 0.3333333333333333,
+                    "variance": 0.2222222222222222,
+                    "stddev": 0.4714045207910317,
+                    "stderr": 0.2721655269759087
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 0.3333333333333333,
+                  "stats": {
+                    "count": 3,
+                    "sum": 1.0,
+                    "sum_squared": 1.0,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "mean": 0.3333333333333333,
+                    "variance": 0.2222222222222222,
+                    "stddev": 0.4714045207910317,
+                    "stderr": 0.2721655269759087
+                  }
+                }
+              }
+            }
+          }
+        },
+        "노동법-해고연차": {
+          "groups": null,
+          "metrics": {
+            "before_expected_law": {
+              "scores": {
+                "base": {
+                  "value": 1.0,
+                  "stats": {
+                    "count": 3,
+                    "sum": 3.0,
+                    "sum_squared": 3.0,
+                    "min": 1.0,
+                    "max": 1.0,
+                    "mean": 1.0,
+                    "variance": 0.0,
+                    "stddev": 0.0,
+                    "stderr": 0.0
+                  }
+                }
+              }
+            },
+            "after_expected_law": {
+              "scores": {
+                "sft": {
+                  "value": 1.0,
+                  "stats": {
+                    "count": 3,
+                    "sum": 3.0,
+                    "sum_squared": 3.0,
+                    "min": 1.0,
+                    "max": 1.0,
+                    "mean": 1.0,
+                    "variance": 0.0,
+                    "stddev": 0.0,
+                    "stderr": 0.0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "metrics": {}
+    }
+  }
+}
