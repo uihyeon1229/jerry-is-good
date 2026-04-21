@@ -155,18 +155,18 @@ def judge_column() -> LLMJudgeColumnConfig:
         model_alias="judge",
         scores=[
             Score(
-                name="법령정확성",
-                description="조문 인용의 정확성과 개정사항 반영 정도 (1-5)",
+                name="legal_accuracy",
+                description="조문 인용의 정확성과 개정사항 반영 정도 (법령정확성, 1-5)",
                 options=SCORE_1_TO_5,
             ),
             Score(
-                name="CoT깊이",
-                description="조문→사실→계산→결론 4단계의 명확성 (1-5)",
+                name="cot_depth",
+                description="조문→사실→계산→결론 4단계의 명확성 (CoT 깊이, 1-5)",
                 options=SCORE_1_TO_5,
             ),
             Score(
-                name="실무유용성",
-                description="실제 납세자/실무자가 적용 가능한 구체성 (1-5)",
+                name="practical_utility",
+                description="실제 납세자/실무자가 적용 가능한 구체성 (실무 유용성, 1-5)",
                 options=SCORE_1_TO_5,
             ),
         ],
