@@ -188,20 +188,32 @@ builder.with_seed_dataset(
 - 조문 텍스트 너무 길면 토큰 초과 → 조문당 500자로 자르고, 세목당 Top-5 선별 (자주 쓰이는 조문 우선)
 - Top-5 선별 로직: seeds 수집 시 "중요도 순"으로 정렬 (예: 소득세법은 §20, §47, §51 먼저)
 
-## 9.6 레버 L2 — 결정론적 조문 검증 상세
+## 9.6 레버 L2 — Korean Law MCP 기반 결정론적 조문 검증 (개정)
 
-### 검증 규칙
+### 왜 MCP인가 (2026-04-21 실측 기반)
 
-1. `reasoning_cot` 텍스트에서 regex로 "(소득세법|법인세법|부가가치세법|상증세법)(\s*시행(령|규칙))?\s*제(\d+)조" 추출
-2. 각 후보를 **법제처 API의 조문 존재 체크**로 확인 (batch 가능)
-3. `cited_laws_total`, `cited_laws_valid`, `cited_laws_valid_ratio` 세 컬럼 추가
-4. `valid_ratio < 0.7` 또는 `cited_laws_total == 0` 인 행 제거
+- `https://korean-law-mcp.fly.dev/mcp?oc=<OC>`는 Brev 방화벽을 통과 (`law.go.kr` 직접 호출은 차단됨)
+- MCP의 `verify_citations(text, maxCitations)` 한 번 호출로 **추출 + 법제처 DB 매칭 + 환각 플래그**가 모두 처리됨. 우리가 regex/캐시/배치를 다시 짤 필요 없음
+- 응답 포맷: `✓ 실존 / ✗ NOT_FOUND / ⚠ 확인필요` + `[HALLUCINATION_DETECTED]` 플래그 헤더
+- 발표 서사: "**법제처 공식 MCP를 Nemotron 파이프라인에 통합**" (직접 HTTP 호출 대비 훨씬 강력)
 
-### 법제처 호출 최적화
+### 우리가 구현할 것
 
-- 로컬 캐시 (`cache/law_exists.json`): 조문 존재 여부 하드코딩 룩업 테이블
-- 시드 수집 때 이미 모든 조문 번호를 가지고 있으므로, 이 목록을 기본 캐시로 사용
-- 외부 호출은 캐시에 없는 조문 번호만
+1. `pipeline/validators/citation_validator.py` — 얇은 비동기 래퍼
+   - 입력: `reasoning_cot` 텍스트
+   - `mcp.ClientSession` + `streamablehttp_client` 로 연결
+   - `call_tool("verify_citations", {"text": cot, "maxCitations": 15})`
+   - 응답 텍스트 파싱 → `{total, valid, invalid, warnings, has_hallucination, invalid_refs[]}` dict
+2. `pipeline/run_verify_citations.py` — JSONL 파이프라인 단계
+   - `output/raw/*.jsonl` 읽어 각 행에 대해 validator 호출
+   - 컬럼 추가: `cited_laws_total`, `cited_laws_valid`, `cited_laws_valid_ratio`, `has_hallucination`
+   - `valid_ratio < 0.7` 또는 `has_hallucination=True` 면 제거
+
+### 속도 최적화
+
+- 동시성: `asyncio.Semaphore(8)` 로 최대 8개 병렬 호출
+- 캐시 레이어 (선택): `hash(cot)` → 결과 dict 로컬 디스크 캐시 (재실행 비용↓)
+- fly.dev 한도 초과시 retry with backoff
 
 ### 출력 포맷 예시
 
@@ -210,13 +222,12 @@ builder.with_seed_dataset(
   "question": "...",
   "reasoning_cot": "...",
   "cited_laws_total": 3,
-  "cited_laws_valid": 2,
-  "cited_laws_valid_ratio": 0.67,
-  "cited_laws_detail": [
-    {"ref": "소득세법 제20조", "valid": true},
-    {"ref": "소득세법 제47조", "valid": true},
-    {"ref": "소득세법 제999조", "valid": false}
-  ]
+  "cited_laws_valid": 1,
+  "cited_laws_warning": 1,
+  "cited_laws_invalid": 1,
+  "cited_laws_valid_ratio": 0.33,
+  "has_hallucination": true,
+  "invalid_refs": ["부가가치세법 제999조"]
 }
 ```
 
