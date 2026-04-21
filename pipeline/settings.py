@@ -27,9 +27,9 @@ class Settings:
     # 법제처
     law_oc: str = os.getenv("LAW_OC", "")
 
-    # 파이프라인 크기 / 토큰 예산
+    # 파이프라인 크기 / 토큰 예산 (vLLM max-model-len 32768 기준, L1 seed 주입 입력 고려)
     num_records: int = _int("PIPELINE_NUM_RECORDS", 1000)
-    max_tokens_cot: int = _int("PIPELINE_MAX_TOKENS_COT", 16384)
+    max_tokens_cot: int = _int("PIPELINE_MAX_TOKENS_COT", 12000)
     max_tokens_question: int = _int("PIPELINE_MAX_TOKENS_QUESTION", 1024)
     max_tokens_metadata: int = _int("PIPELINE_MAX_TOKENS_METADATA", 512)
     max_tokens_judge: int = _int("PIPELINE_MAX_TOKENS_JUDGE", 1024)
