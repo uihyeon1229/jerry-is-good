@@ -50,6 +50,11 @@ GRAD_ACCUM = int(os.getenv("GRAD_ACCUM", "16"))
 MAX_SEQ_LEN = int(os.getenv("MAX_SEQ_LEN", "4096"))
 MIN_COT_LEN = int(os.getenv("MIN_COT_LEN", "300"))
 
+# Chain 실행 지원
+SFT_MAX_SAMPLES = int(os.getenv("SFT_MAX_SAMPLES", "0"))  # 0 = 전량
+SFT_RESUME = os.getenv("SFT_RESUME", "0") == "1"
+SFT_SEED = int(os.getenv("SFT_SEED", "42"))
+
 SYSTEM_PROMPT = (
     "당신은 한국 법률 전문가입니다. 질문에 대해 적용 조문 → 사실관계 → 해석/계산 → 결론 "
     "4단계로 답하세요. 조문은 실제 존재하는 것만 인용하세요."
@@ -91,12 +96,18 @@ def main() -> None:
 
     # 1. 데이터 로드
     data = load_train_data(TRAIN_INPUT)
-    print(f"=== 로드된 학습 데이터: {len(data)}건 ===", flush=True)
+    print(f"=== 로드된 학습 데이터(필터 통과): {len(data)}건 ===", flush=True)
+
+    # dry-run 모드: 상위 N건만 사용
+    if SFT_MAX_SAMPLES > 0:
+        data = data[:SFT_MAX_SAMPLES]
+        print(f"=== SFT_MAX_SAMPLES={SFT_MAX_SAMPLES} 적용 → 학습 데이터 {len(data)}건 ===", flush=True)
+
     if len(data) < 100:
         print("⚠ 데이터가 너무 적음 (< 100). 그래도 계속 진행합니다.", flush=True)
 
     ds = Dataset.from_list(data)
-    split = ds.train_test_split(test_size=0.05, seed=42)
+    split = ds.train_test_split(test_size=0.05, seed=SFT_SEED)
     train_ds, eval_ds = split["train"], split["test"]
     print(f"  train={len(train_ds)}, eval={len(eval_ds)}", flush=True)
 
@@ -169,8 +180,18 @@ def main() -> None:
         processing_class=tokenizer,
     )
 
-    print("=== 학습 시작 ===", flush=True)
-    trainer.train()
+    print(f"=== 학습 시작 (resume={SFT_RESUME}) ===", flush=True)
+    if SFT_RESUME and OUTPUT_DIR.exists():
+        # checkpoint-XXX 폴더 존재하는지 확인
+        ckpts = sorted(OUTPUT_DIR.glob("checkpoint-*"))
+        if ckpts:
+            print(f"=== resuming from {ckpts[-1]} ===", flush=True)
+            trainer.train(resume_from_checkpoint=True)
+        else:
+            print("=== SFT_RESUME=1 이지만 checkpoint 없음 → 처음부터 학습 ===", flush=True)
+            trainer.train()
+    else:
+        trainer.train()
 
     # 5. 최종 어댑터 저장
     final_dir = OUTPUT_DIR / "final"
