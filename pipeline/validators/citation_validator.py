@@ -22,6 +22,8 @@ from typing import Any
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
+from .. import cache as _cache
+
 
 DEFAULT_URL = os.getenv(
     "LAW_MCP_URL",
@@ -95,9 +97,28 @@ async def verify_text(
     session: ClientSession,
     text: str,
     max_citations: int = DEFAULT_MAX_CITATIONS,
+    *,
+    use_cache: bool = True,
 ) -> CitationResult:
     if not text or not text.strip():
         return CitationResult()
+
+    cache_key = f"verify_citations_mc{max_citations}"
+    if use_cache:
+        cached = _cache.get(cache_key, text)
+        if cached is not None:
+            r = CitationResult(
+                total=cached.get("cited_laws_total", 0),
+                valid=cached.get("cited_laws_valid", 0),
+                warning=cached.get("cited_laws_warning", 0),
+                invalid=cached.get("cited_laws_invalid", 0),
+                has_hallucination=cached.get("has_hallucination", False),
+                invalid_refs=list(cached.get("invalid_refs", [])),
+                warning_refs=list(cached.get("warning_refs", [])),
+                raw=cached.get("_raw", ""),
+            )
+            return r
+
     resp = await session.call_tool(
         "verify_citations",
         {"text": text, "maxCitations": max_citations},
@@ -106,7 +127,14 @@ async def verify_text(
     if resp.content:
         first = resp.content[0]
         body = getattr(first, "text", str(first))
-    return parse_verify_response(body)
+    result = parse_verify_response(body)
+
+    if use_cache:
+        payload = result.to_dict()
+        payload["_raw"] = result.raw[:500]
+        _cache.put(cache_key, text, payload)
+
+    return result
 
 
 async def verify_batch(
