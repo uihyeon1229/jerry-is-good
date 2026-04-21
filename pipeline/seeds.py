@@ -17,16 +17,19 @@ from pathlib import Path
 from .settings import settings
 
 
-# 세목 이름(3축 Sampler의 값) → 시드 파일 매핑
+# 세목(Sampler 값) → 시드 파일 매핑 (v2.1: 8세부 3도메인)
 SEMOK_TO_SEED_FILE: dict[str, str] = {
-    "소득세-근로소득": "income_tax",
-    "소득세-사업소득": "income_tax",
-    "상속세": "inheritance_gift_tax",
-    "증여세": "inheritance_gift_tax",
-    "법인세-세무조정": "corporate_tax",
-    "법인세-감가상각": "corporate_tax",
-    "부가가치세-과세면세": "vat",
-    "부가가치세-매입세액공제": "vat",
+    # 세법
+    "세법-소득세": "income_tax",
+    "세법-법인세": "corporate_tax",
+    "세법-부가가치세": "vat",
+    "세법-상속증여세": "inheritance_gift_tax",
+    # 민법 (같은 파일 공유, 토픽이 프롬프트 맥락만 분기)
+    "민법-계약임대차": "civil_contract",
+    "민법-상속증여": "civil_inheritance",
+    # 노동법
+    "노동법-임금퇴직금": "labor_wage",
+    "노동법-해고연차": "labor_dismissal",
 }
 
 
