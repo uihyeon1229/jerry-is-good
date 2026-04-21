@@ -1,0 +1,63 @@
+# NeMo Curator 설정 (S5 — dedup + 품질 + semantic cluster 다양성)
+input:
+  path: output/safe/*.jsonl
+  format: jsonl
+
+steps:
+  # 1. 완전 중복 제거
+  - name: exact_dedup
+    type: ExactDuplicatesFilter
+    field: reasoning_cot
+
+  # 2. fuzzy dedup (MinHash)
+  - name: fuzzy_dedup
+    type: FuzzyDuplicatesFilter
+    field: reasoning_cot
+    threshold: 0.85
+
+  # 3. 의미적 중복 제거 (bge-m3 임베딩 기반)
+  - name: semantic_dedup
+    type: SemanticDeduplicator
+    field: question
+    threshold: 0.90
+    model: BAAI/bge-m3
+
+  # 4. 길이 필터
+  - name: length_filter
+    type: WordCountFilter
+    field: reasoning_cot
+    min_words: 50
+    max_words: 2000
+
+  # 5. 한국어 필터 (fastText)
+  - name: language_filter
+    type: FastTextLangId
+    field: reasoning_cot
+    target_lang: ko
+    min_score: 0.85
+
+  # 6. L2 검증 임계치 재확인
+  - name: citation_threshold
+    type: ThresholdFilter
+    field: cited_laws_valid_ratio
+    min_value: 0.5
+
+  # 7. Judge 품질 임계치
+  - name: judge_threshold
+    type: ThresholdFilter
+    field: quality_score.cot_depth
+    min_value: 3
+
+  # 8. 의미 cluster 다양성 강제 (K-means + 클러스터당 상한)
+  - name: cluster_balance
+    type: SemanticClusterBalance
+    field: question
+    num_clusters: 50
+    max_per_cluster: 20  # 한 클러스터에서 최대 20건만 남김 (다양성 확보)
+
+output:
+  path: output/final/
+  format: jsonl
+  split:
+    train: 0.95
+    eval: 0.05

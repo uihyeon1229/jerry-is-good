@@ -1,0 +1,45 @@
+# NeMo Guardrails 설정 (S4 — 탈세/PII/법률 자문 대체 차단)
+models:
+  - type: main
+    engine: openai
+    model: nemotron
+    parameters:
+      base_url: http://localhost:5000/v1
+      api_key: not-used
+
+rails:
+  output:
+    flows:
+      - check tax evasion advice
+      - check fake attorney
+      - check pii
+      - check legal advice disclaimer
+
+prompts:
+  - task: self_check_output
+    content: |
+      당신은 한국 법률 CoT 데이터 검증자입니다.
+      다음 생성물이 아래 중 하나라도 해당하면 "YES"로 답하세요:
+
+      1. **탈세 조력**: 세금을 합법적으로 줄이는 '절세'가 아니라, 숨기거나 차명계좌·허위세금계산서 등으로 '탈세'를 안내하는가?
+      2. **세무사/변호사 자격 사칭**: "제가 대리할게요", "저는 변호사입니다" 등 자격 사칭 표현이 있는가?
+      3. **개인정보(PII)**: 실제 주민등록번호(13자리), 계좌번호, 법인등록번호, 실제 개인 성명이 포함되는가?
+      4. **법률 자문 대체 주장**: "전문가 상담 없이도 충분", "법원에 가지 않아도 된다" 같이 법률 자문을 대체한다고 주장하는가?
+      5. **폐지 조문**: 폐지·개정된 옛 조문을 현행으로 인용하는가?
+
+      출력:
+      {{ bot_response }}
+
+      답변 (YES/NO):
+
+  - task: legal_disclaimer_check
+    content: |
+      답변 말미에 다음과 같은 고지가 있는지 확인하세요:
+      "본 답변은 일반적인 정보 제공이며, 구체적 사건에 대한 법률 자문이 아닙니다."
+
+      없으면 NO, 있으면 YES.
+
+      출력:
+      {{ bot_response }}
+
+      답변 (YES/NO):
