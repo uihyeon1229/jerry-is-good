@@ -131,6 +131,52 @@ trainer = train_on_responses_only(
 
 ---
 
+## 2.5. 체크포인트 백업 정책
+
+Unsloth SFT는 `save_steps=50` + `save_total_limit=3`으로 돌기 때문에 Phase 2 진행 중 Phase 1 최종 체크포인트가 **자동 삭제될 수 있다**. Phase 별 어댑터 보존용 별도 백업 운영:
+
+### VM 내부 백업 (1차, 속도 우선)
+```
+/ephemeral/backups/sft_phase1_20260422/
+├── checkpoint-63_phase1_500x1ep/   # optimizer state 포함, 재학습 가능 (2.6 GB)
+├── final_phase1/                   # LoRA 어댑터만, 추론용 (≈1.5 GB)
+├── final_phase1.tgz                # 로컬 전송용 압축 (1.6 GB)
+├── chain.log                       # Phase 1 전체 콘솔
+└── sft_phase1.log                  # Phase 1 trainer 로그
+```
+
+위치 선택 이유: 기본 학습 디렉토리와 **동일 `/ephemeral` 파티션** 이라 복사 I/O 거의 무료. OS 디스크(`/dev/vda1`, 97 GB, 자주 포화) 로 쓰지 않도록 주의.
+
+### 로컬 WSL 백업 (2차, 인스턴스 terminate 대비)
+```
+{repo}/backup_sft_phase1_20260422/
+├── final_phase1.tgz
+├── chain.log
+└── sft_phase1.log
+```
+`.gitignore` 의 `backup_*/` 규칙으로 자동 제외됨. 발표 자료·벤치마크 비교용 스냅샷.
+
+### Phase 2 완료 시 동일 패턴으로
+- `/ephemeral/backups/sft_phase2_YYYYMMDD/`
+- `{repo}/backup_sft_phase2_YYYYMMDD/`
+
+### 복구 시나리오
+- **Phase 2 도중 크래시 → Phase 1 어댑터 fallback**:
+  ```bash
+  SFT_MODEL=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+  ADAPTER_PATH=/ephemeral/backups/sft_phase1_20260422/final_phase1 \
+  python inference/load_adapter.py
+  ```
+- **Phase 1/Phase 2 어댑터 비교(ablation)**:
+  - Phase 1 adapter (500건 × 1 epoch) vs Phase 2 adapter (803건 × 3 epoch)
+  - 동일 벤치마크에 두 어댑터 붙여 성능 비교 → "data scaling + epoch" 효과 분리 측정
+
+### 인스턴스 terminate 리스크
+- Brev `jerryisgood-h100-80gib-vram-sxm5` stop → `/ephemeral` 는 **instance-local SSD**, 재기동 시 유지되지만 terminate 시 소실.
+- **절대 복구 불가** 를 피하려면 반드시 로컬 WSL or GCS/S3 복제 병행.
+
+---
+
 ## 3. 파일 변경 목록 (레포 기준)
 
 | 파일 | 변경 |
