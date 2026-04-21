@@ -43,6 +43,7 @@
 | **제공 자원** | Brev.dev $1000 크레딧 (H100 사용 가능), Friendli AI 크레딧 |
 | **가이드** | https://nemotron-dev-materials-q9notf2ox.brevlab.com/ |
 | **공식 문서** | https://nvidia-nemo.github.io/DataDesigner/latest/ |
+| **팀 인스턴스** | `jerryisgood-h100-80gib-vram-sxm5` (H100, vLLM 0.17.1 @ `/home/shadeform/track3`) |
 
 ### Track C가 요구하는 것
 - Nemotron 3 + NeMo Data Designer를 활용한 합성 데이터 파이프라인
@@ -107,7 +108,7 @@
 | 4 | **NeMo Data Designer** | 스키마 기반 합성 파이프라인 |
 | 5 | **NeMo Curator** | 중복제거 + 품질필터 + PII 제거 |
 | 6 | **NeMo Guardrails** | 탈세 조력/법률 탈선 차단 |
-| 7 | **NeMo Framework (SFT)** | Nemotron 3 Nano LoRA 파인튜닝 |
+| 7 | **NeMo Framework (SFT)** | Nemotron 3 Nano 30B FP8 LoRA 파인튜닝 |
 | 8 | **NVIDIA Build API / Nsight** | 비교 검증 + GPU 프로파일 증빙 |
 
 ### 🔶 외부 통합
@@ -257,7 +258,7 @@
 | 12:00–14:00 | 점심 + 첫 통합 (Sampler→LLMText 5건 미리보기) | 전원 |
 | 14:00–18:00 | 본 파이프라인 완성 + Curator/Guardrails/MCP verify 연결 | 전원 |
 | 18:00–22:00 | **500~1000건 본 생성** (백그라운드) + 품질 검수 / 발표 초안 | 전원 |
-| 22:00–       | **SFT 학습 시작** (Nemotron 3 Nano LoRA, 백그라운드 밤샘) | A |
+| 22:00–       | **SFT 학습 시작** (Nemotron 3 Nano 30B FP8 + LoRA, 백그라운드 밤샘) | A |
 
 ### Day 2
 
@@ -316,7 +317,7 @@
 #### [4] HuggingFace 계정 + 토큰 발급 (5분)
 - **누가**: A 담당
 - **어디서**: https://huggingface.co/settings/tokens
-- **목적**: Nemotron 3 Nano 모델 다운로드 + Nemotron 3 Nano 30B (LoRA) 다운로드
+- **목적**: Nemotron 3 Nano 30B A3B FP8 모델 다운로드 (생성 + SFT LoRA 공통)
 - **권한**: Read 권한으로 충분
 
 #### [5] 팀 공용 저장소 준비 (5분)

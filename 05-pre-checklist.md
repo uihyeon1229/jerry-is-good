@@ -69,7 +69,7 @@
 - [ ] 발표 흐름 초안 (슬라이드 제목만이라도)
   - [참고: 09-presentation-deck.md](./09-presentation-deck.md) ← 작성 예정
 - [ ] 예상 Q&A 10개 준비 시작
-  - "왜 Nano인가?", "왜 SFT 대상이 Qwen인가?", "MCP 없이 가능한가?" 등
+  - "왜 Super가 아니고 Nano인가?", "왜 같은 Nemotron을 생성·학습에 모두 쓰는가?", "MCP 없이 가능한가?" 등
 
 ## 5.3 공용 자산 준비
 

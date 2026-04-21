@@ -99,11 +99,14 @@ brev login
 brev ls
 # 생성한 인스턴스 목록 확인
 
-# 인스턴스에 SSH 접속
-brev shell <인스턴스명>
+# 인스턴스에 SSH 접속 (예시: 팀 기본 인스턴스)
+brev shell jerryisgood-h100-80gib-vram-sxm5
 
-# 또는 VSCode로 접속
-brev open <인스턴스명>
+# 비대화형 명령 실행
+brev exec jerryisgood-h100-80gib-vram-sxm5 "nvidia-smi"
+
+# 또는 Cursor/VSCode로 접속
+brev open jerryisgood-h100-80gib-vram-sxm5 cursor
 ```
 
 ## 7.4 WSL에서 프로젝트 이동
@@ -257,15 +260,15 @@ code .
 git add . && git commit -m "..." && git push
 
 # Brev 인스턴스에서 pull
-brev shell <인스턴스명>
-cd ~/projects/nvidia-hackathon
+brev shell jerryisgood-h100-80gib-vram-sxm5
+cd ~/nvidia-hackathon
 git pull
 ```
 
 ### 결과물 다운로드 (Brev → 로컬)
 ```bash
 # 로컬 WSL에서
-brev cp <인스턴스명>:~/workspace/output/train.jsonl ./output/
+brev copy jerryisgood-h100-80gib-vram-sxm5:/home/shadeform/nvidia-hackathon/output/train.jsonl ./output/
 ```
 
 ### 대용량 모델 체크포인트
@@ -279,7 +282,7 @@ brev cp <인스턴스명>:~/workspace/output/train.jsonl ./output/
 tmux new -s sft-training
 
 # 학습 스크립트 실행
-python training/sft_qwen_1.5b.py
+python training/sft_nemotron_nano_lora.py
 
 # 세션 detach: Ctrl+b → d
 
@@ -355,8 +358,11 @@ cd nvidia-hackathon
 brev login
 brev ls
 
-# 4. Brev 인스턴스 접속
-brev shell <인스턴스명>
+# 4. Brev 인스턴스 접속 (팀 기본: jerryisgood-h100-80gib-vram-sxm5)
+brev shell jerryisgood-h100-80gib-vram-sxm5
 
-# 5. 인스턴스에서 작업
+# 5. 인스턴스 내부에서 vLLM venv 활성화
+source /home/shadeform/track3/bin/activate
+
+# 6. 인스턴스에서 작업
 ```

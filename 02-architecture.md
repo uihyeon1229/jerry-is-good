@@ -94,8 +94,8 @@
 │                         ▼                                      │
 │  ┌─────────────────────────────────────────────────────────┐  │
 │  │  NeMo Framework (SFT)                                   │  │
-│  │    • 대상: Nemotron 3 Nano 30B FP8 (LoRA)                │  │
-│  │    • 기법: LoRA (r=16, alpha=32)                        ���  │
+│  │    • 대상 모델: Nemotron 3 Nano 30B A3B FP8             │  │
+│  │    • 기법: LoRA (r=16, alpha=32)                         │  │
 │  │    • 학습 시간: 4~6시간 on 1x H100                      │  │
 │  │    • 배치 크기: 2, grad accum 16                        │  │
 │  │    • epoch: 3, lr: 1e-5                                 │  │
@@ -142,10 +142,13 @@
 
 | 서비스 | 포트 | 설명 |
 |--------|------|------|
-| vLLM API | 5000 | OpenAI 호환, `nemotron` 모델명 |
+| vLLM API | 5000 | OpenAI 호환, `served-model-name=nemotron` (Brev 공식 가이드 기본값) |
 | Data Designer | N/A | SDK (프로세스 내 실행) |
 | Korean Law MCP | 3000 또는 원격 | `korean-law-mcp.fly.dev/mcp?oc=키` |
 | Jupyter | 8888 | 개발용 (선택) |
+
+> ⚠️ **공유 인스턴스 포트 규칙**: `jerryisgood-h100-80gib-vram-sxm5`는 여러 개발자가 공유함.
+> **포트 7000~7010은 XBRL 트랙에서 사용 중이므로 절대 사용 금지**. 우리 팀은 5xxx / 8xxx 대역만 사용.
 
 ## 2.4 모델 설정 (Nemotron Nano FP8)
 
@@ -167,38 +170,42 @@ Judge 모델:
   enable_thinking: false  # 빠른 평가
 ```
 
-## 2.5 파일 시스템 레이아웃 (H100 인스턴스 내부)
+## 2.5 파일 시스템 레이아웃 (Brev H100 인스턴스 내부)
+
+> 인스턴스 기본 사용자: `shadeform`. venv는 `~/track3`에 이미 생성되어 있고 vLLM 0.17.1 + Torch 2.10.0+cu128이 설치됨.
 
 ```
-/workspace/
-├── track3/                       # Python venv
-├── scripts/
-│   ├── launch_nemotron_nano.sh   # vLLM 실행
-│   └── collect_seeds.py          # MCP 시드 수집
-├── cache/
-│   ├── seeds/
-│   │   ├── income_tax.jsonl
-│   │   ├── corporate_tax.jsonl
-│   │   ├── vat.jsonl
-│   │   └── inheritance_tax.jsonl
-│   └── decisions.jsonl
-├── pipeline/
-│   ├── config.py                 # Data Designer 스키마
-│   ├── guardrails/               # Guardrails config
-│   └── curator_config.yaml
-├── output/
-│   ├── raw/                      # Data Designer 원본
-│   ├── filtered/                 # Guardrails/Curator 통과
-│   ├── verified/                 # MCP verify 통과
-│   ├── train.jsonl
-│   ├── eval.jsonl
-│   └── full.parquet
-├── training/
-│   ├── sft_nemotron_nano_lora.py
-│   └── checkpoints/
-└── benchmark/
-    ├── questions.jsonl           # 20문제
-    ├── answers_base.jsonl
-    ├── answers_sft.jsonl
-    └── report.md
+/home/shadeform/
+├── track3/                       # Python venv (vLLM 0.17.1)
+├── nvidia-hackathon/             # 이 레포 (git clone)
+│   ├── scripts/
+│   │   ├── launch_nemotron_nano.sh   # vLLM 실행
+│   │   └── collect_seeds.py          # MCP 시드 수집
+│   ├── cache/
+│   │   ├── seeds/
+│   │   │   ├── income_tax.jsonl
+│   │   │   ├── corporate_tax.jsonl
+│   │   │   ├── vat.jsonl
+│   │   │   └── inheritance_tax.jsonl
+│   │   └── decisions.jsonl
+│   ├── pipeline/
+│   │   ├── config.py                 # Data Designer 스키마
+│   │   ├── guardrails/               # Guardrails config
+│   │   └── curator_config.yaml
+│   ├── output/
+│   │   ├── raw/                      # Data Designer 원본
+│   │   ├── filtered/                 # Guardrails/Curator 통과
+│   │   ├── verified/                 # MCP verify 통과
+│   │   ├── train.jsonl
+│   │   ├── eval.jsonl
+│   │   └── full.parquet
+│   ├── training/
+│   │   ├── sft_nemotron_nano_lora.py
+│   │   └── checkpoints/
+│   └── benchmark/
+│       ├── questions.jsonl           # 20문제
+│       ├── answers_base.jsonl
+│       ├── answers_sft.jsonl
+│       └── report.md
+└── .cache/huggingface/           # 모델 체크포인트 (~60GB)
 ```
