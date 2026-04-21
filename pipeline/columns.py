@@ -14,6 +14,12 @@ from data_designer.config import (
 )
 from data_designer.config.custom_column import custom_column_generator
 
+from .personas import (
+    affinity_weights,
+    load_personas_df,
+    nando_weights_for,
+    weighted_sample_semok,
+)
 from .schema import (
     NANDO_VALUES,
     NANDO_WEIGHTS,
@@ -32,10 +38,83 @@ from .seeds import seed_context_for
 
 
 def semok_column() -> SamplerColumnConfig:
+    """L4 없이 쓸 때의 단순 Sampler (fallback)."""
     return SamplerColumnConfig(
         name="세목",
         sampler_type=SamplerType.CATEGORY,
         params=CategorySamplerParams(values=SEMOK_VALUES, weights=SEMOK_WEIGHTS),
+    )
+
+
+# =====================================================================
+# C1 — Persona-Law Affinity: 페르소나 + 세목을 하나의 Custom 컬럼에서 동시 생성
+# =====================================================================
+
+_PERSONAS_CACHE = None
+
+
+def _get_personas():
+    global _PERSONAS_CACHE
+    if _PERSONAS_CACHE is None:
+        import random
+
+        df = load_personas_df()
+        # dict 리스트로 변환
+        _PERSONAS_CACHE = df.to_dict(orient="records")
+    return _PERSONAS_CACHE
+
+
+@custom_column_generator(side_effect_columns=["persona_ref", "난이도"])
+def _persona_and_semok_generator(row: dict) -> dict:
+    """C1 — 페르소나 하나를 고르고, affinity에 따라 세목 + 학력 조건부 난이도 생성.
+
+    side_effect로 persona_ref(프롬프트 주입용 요약)·난이도를 동시 주입.
+    """
+    import random
+
+    personas = _get_personas()
+    persona = random.choice(personas)
+    semok = weighted_sample_semok(persona, rng=random)
+
+    # 프롬프트용 페르소나 요약 문자열
+    parts = []
+    if persona.get("age"):
+        parts.append(f"{persona['age']}세")
+    if persona.get("sex"):
+        parts.append(persona["sex"])
+    if persona.get("occupation"):
+        parts.append(f"직업 {persona['occupation']}")
+    if persona.get("education_level"):
+        parts.append(f"학력 {persona['education_level']}")
+    if persona.get("family_type"):
+        parts.append(persona["family_type"])
+    if persona.get("housing_type"):
+        parts.append(persona["housing_type"])
+    if persona.get("province"):
+        parts.append(persona["province"])
+    persona_ref = ", ".join(parts) or "(페르소나 미지정)"
+
+    # 학력 조건부 난이도 샘플링
+    nando_w = nando_weights_for(persona.get("education_level"))
+    nando = random.choices(
+        list(nando_w.keys()),
+        weights=list(nando_w.values()),
+        k=1,
+    )[0]
+
+    return {
+        **row,
+        "세목": semok,
+        "persona_ref": persona_ref,
+        "난이도": nando,
+    }
+
+
+def persona_semok_column() -> CustomColumnConfig:
+    """C1 — 세목(+persona_ref/난이도 side_effect) 생성 컬럼."""
+    return CustomColumnConfig(
+        name="세목",
+        generator_function=_persona_and_semok_generator,
     )
 
 
@@ -60,14 +139,18 @@ def nando_column() -> SamplerColumnConfig:
 # =====================================================================
 
 
-QUESTION_PROMPT = """당신은 한국 세법 전문가입니다.
-다음 조건에 맞는 **납세자 관점의 현실적인 질문** 하나를 만들어 주세요.
+QUESTION_PROMPT = """당신은 한국 법률 전문가입니다.
+아래 납세자/의뢰인의 현실 상황에 맞는 **구체적인 질문** 하나를 만들어 주세요.
 
-- 세목: {{ 세목 }}
+[의뢰인 페르소나]
+{{ persona_ref }}
+
+[조건]
+- 도메인/세부: {{ 세목 }}
 - 질문유형: {{ 질문유형 }}
 - 난이도: {{ 난이도 }}
 
-출력은 질문 한 문장 혹은 한 단락으로만 작성하세요. 서두/설명 없이 질문만 출력.
+출력은 질문 한 문장 혹은 한 단락으로만 작성하세요. 의뢰인의 상황(나이·직업·가족)이 자연스럽게 녹아들어야 합니다. 서두/설명 없이 질문만 출력.
 """
 
 
