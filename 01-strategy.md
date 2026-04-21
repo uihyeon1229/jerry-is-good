@@ -14,33 +14,46 @@
 
 → 우리는 이 3가지를 정공법으로 노린다.
 
-## 1.2 3대 차별화 축
+## 1.2 차별화 축 (v2 — 5레버)
 
-### ① 양적 차별화: NVIDIA 스택 8종 End-to-End
+> 상세 설계는 [09-pipeline-design-v2.md](./09-pipeline-design-v2.md).
+
+### ① NVIDIA 스택 **9종** End-to-End (양적 차별화)
 대부분 팀은 Nemotron + Data Designer 2~3개만 쓸 것이다.
-우리는 **생성→필터→학습→평가 풀루프**를 NVIDIA 스택만으로 완성:
+우리는 **시드→생성→검증→필터→학습→평가→데모 풀루프**를 NVIDIA 스택만으로 완성:
 - Brev.dev (인프라)
 - Nemotron 3 Nano FP8 (생성)
-- vLLM + Reasoning Parser (서빙)
+- vLLM + Reasoning Parser nano_v3 (서빙)
 - NeMo Data Designer (파이프라인)
 - NeMo Curator (필터링)
 - NeMo Guardrails (안전성)
-- NeMo Framework (학습)
-- NVIDIA Build API / Nsight (검증)
+- NeMo Framework (SFT)
+- NVIDIA Build API / Nsight (검증·증빙)
+- **Nemotron-Personas-Korea** (질문 다양성 Seed) ← v2 추가
 
-### ② 질적 차별화: Korean Law MCP 통합
-LLM 환각은 법률 도메인의 최대 리스크.
-`chrisryugj/korean-law-mcp`를 사용하면:
-- 법제처 공식 조문을 **직접 인용** (환각 원천 차단)
-- `verify_citations` 도구로 **2차 환각 검증**
-- "우리는 법제처 공식 API를 통합했다" = 데모 가능한 신뢰성
+### ② Korean Law MCP + **3중 결정론 검증** (질적 차별화)
+LLM 환각은 법률 도메인의 최대 리스크. 우리는 **사전 차단 + 사후 제거 + 객관 채점**의 3중 구조:
+- **L1 시드 주입**: 법제처 조문을 프롬프트 context로 강제 → 환각 발생 자체를 줄임
+- **L2 결정론 검증**: regex + 법제처 API로 인용 조문의 실존 여부 검증 → `cited_laws_valid_ratio` KPI 산출
+- **L3 계산 검증**: sympy로 계산 문제의 수치 재계산 → `calc_verified` 플래그
+- 발표에서 "Judge LLM 점수"가 아닌 **"법제처 DB 매칭률"**을 증거로 제시
 
-### ③ 도메인 차별화: 회계법인 정체성
+### ③ Nemotron-Personas-Korea로 데이터셋 "쓸모" 차별화
+NVIDIA가 만든 한국어 페르소나 × NVIDIA 모델 × 법제처 공식 API:
+- 질문 다양성: 연령·직업·학력·가족상태 등 10개 필드 기반
+- 난이도 현실성: `education_level` → 난이도 조건부 매핑 (초졸이 "세무조정 고급"을 묻는 부자연스러움 제거)
+- 발표: **"우리는 대한민국 인구 분포를 모사한 페르소나로 질문을 생성했다"**
+
+### ④ 회계법인 도메인 정체성
 - 감사 대신 **세법**을 선택한 이유:
   - 심사위원 이해도 높음 (누구나 세금 경험)
   - CoT 구조가 명확 (조문→사실→계산→결론)
   - 공개 데이터 풍부
 - "회계법인이 직접 만든 세법 AI 데이터셋" = 도메인 전문성 스토리
+
+### ⑤ Tool-use 라이브 데모 (발표 임팩트)
+Nemotron의 `--enable-auto-tool-choice` + `qwen3_coder` parser를 활용한 실시간 법제처 조회 데모.
+"Nemotron이 법제처 API를 직접 호출한다" — 심사위원이 본 적 없을 라이브 증거.
 
 ## 1.3 왜 Nano 30B FP8인가?
 

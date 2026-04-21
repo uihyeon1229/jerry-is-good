@@ -16,6 +16,8 @@
 | [05-pre-checklist.md](./05-pre-checklist.md) | 대회 전 준비 체크리스트 | **전원 필수** |
 | [06-presentation-outline.md](./06-presentation-outline.md) | 발표 15슬라이드 초안 + 예상 Q&A | D 담당 |
 | [07-wsl-setup.md](./07-wsl-setup.md) | **WSL 환경 세팅 (Brev는 WSL 전용)** | **전원 필수** |
+| [08-pipeline-plan.md](./08-pipeline-plan.md) | Smoke Test 결과 + 스켈레톤 파이프라인 계획 (v1) | A, B |
+| [09-pipeline-design-v2.md](./09-pipeline-design-v2.md) | **차별화 5레버 확정판 (L1~L5) + 실전 설계** | **전원 필수** |
 
 > ⚠️ **Brev CLI가 WSL에서만 제대로 작동함**이 확인되어, 전원 **WSL2 + Ubuntu 22.04** 환경 통일 필수. 상세: [07-wsl-setup.md](./07-wsl-setup.md)
 
@@ -59,20 +61,21 @@
 
 1박 2일 짧은 기간에 데이터 품질 경쟁으로 남들과 차별화하기 어렵다. 주관사(NVIDIA)가 가장 보고 싶어하는 것은 **자기 기술의 End-to-End 활용 사례**이므로, 여기에 집중한다.
 
-### 3대 차별화 축
+### 5대 차별화 레버 (상세: [09-pipeline-design-v2.md](./09-pipeline-design-v2.md))
 
-#### ① NVIDIA 스택 **8종** End-to-End 통합
-- 단일 기술 1~2개가 아니라, **생성→필터→학습→평가 풀루프**를 NVIDIA 스택만으로 완성
-- 발표에서 "우리는 NVIDIA 생태계를 이렇게 썼다"를 메인 서사로
+| # | 레버 | 효과 |
+|---|------|------|
+| **L1** | 법제처 조문을 프롬프트 **Seed Context로 주입** | 환각 **사전 차단** |
+| **L2** | 법제처 API로 **결정론적 조문 존재성 검증** | 환각 **사후 제거**, 객관 KPI 확보 |
+| **L3** | 계산 문제의 수치를 **Python(sympy)으로 재계산·검증** | 수치 **정답 보장** |
+| **L4** | **Nemotron-Personas-Korea**로 질문 다양성 주입 (+조건부 난이도 매핑) | 데이터셋 **쓸모** 차별화 |
+| **L5** | Nemotron + MCP **Tool-use 라이브 데모** | 발표 **임팩트** |
 
-#### ② 한국 법제처 공식 API (Korean Law MCP) 통합
-- `chrisryugj/korean-law-mcp` 활용
-- LLM 환각을 **법제처 공식 조문으로 원천 차단**
-- "환각 없는 법률 CoT 생성" 스토리 = 심사위원에게 강렬한 인상
+**한 문장 서사**: *"Nemotron-Personas로 질문을 만들고, Nemotron으로 답하고, 법제처로 검증하고, Nemotron을 파인튜닝해 실증한다."*
 
-#### ③ 회계법인 도메인 정체성
-- 한국 세법 QA: 감사보다 **CoT 적합도가 높고, 심사위원 이해도도 높음**
-- "세무사 시험 수준" 임팩트 있는 데모 가능
+### 도메인 차별화
+- 회계법인 소속 → **세법 CoT**: 감사보다 심사위원 이해도 높고, CoT 구조(조문→사실→계산→결론) 명확
+- 실무자 검증 가능 (도메인 신뢰성 서사)
 
 ### 왜 세법인가? (감사 vs 세법)
 
@@ -98,18 +101,19 @@
 
 ## 3. 기술 스택
 
-### 🔷 NVIDIA 스택 (8종)
+### 🔷 NVIDIA 스택 (9종)
 
 | # | 기술 | 역할 |
 |---|------|------|
 | 1 | **Brev.dev** | H100 GPU 프로비저닝 (스폰서) |
 | 2 | **Nemotron 3 Nano FP8** | 데이터 생성 LLM (1x H100) |
-| 3 | **vLLM + Reasoning Parser** | OpenAI 호환 서빙, thinking 모드 |
+| 3 | **vLLM + Reasoning Parser (nano_v3)** | OpenAI 호환 서빙, thinking 모드 |
 | 4 | **NeMo Data Designer** | 스키마 기반 합성 파이프라인 |
-| 5 | **NeMo Curator** | 중복제거 + 품질필터 + PII 제거 |
+| 5 | **NeMo Curator** | 중복제거 + 품질필터 + 의미 cluster 다양성 |
 | 6 | **NeMo Guardrails** | 탈세 조력/법률 탈선 차단 |
 | 7 | **NeMo Framework (SFT)** | Nemotron 3 Nano 30B FP8 LoRA 파인튜닝 |
 | 8 | **NVIDIA Build API / Nsight** | 비교 검증 + GPU 프로파일 증빙 |
+| 9 | **Nemotron-Personas-Korea** | 질문 다양성 Seed (+ 조건부 난이도 매핑) |
 
 ### 🔶 외부 통합
 

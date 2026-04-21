@@ -33,11 +33,14 @@
   - 수작업 어노테이션 비용
 
 ### [S3] 우리의 솔루션 (One-liner)
-**"법제처 공식 API × NVIDIA NeMo 스택 8종 = 환각 없는 합성 CoT 파이프라인"**
-- 큰 3가지 차별화:
-  - NVIDIA 스택 End-to-End (8종)
-  - 법제처 MCP로 환각 차단
-  - 실제 회계법인이 도메인 검증
+**"Nemotron-Personas로 질문을 만들고, Nemotron으로 답하고, 법제처로 검증하고, Nemotron을 파인튜닝해 실증한다."**
+- 5대 차별화 레버 ([09-pipeline-design-v2.md](./09-pipeline-design-v2.md)):
+  - L1 조문 Seed Context 주입 (환각 사전 차단)
+  - L2 법제처 API 결정론 검증 (환각 사후 제거)
+  - L3 sympy 계산 검증 (수치 정답 보장)
+  - L4 Nemotron-Personas-Korea 질문 다양성
+  - L5 Nemotron Tool-use 라이브 데모
+- NVIDIA 스택 **9종** End-to-End + 회계법인 도메인 검증
 
 ### [S4] 아키텍처 다이어그램
 - [02-architecture.md](./02-architecture.md)의 다이어그램 그대로
@@ -78,10 +81,11 @@
 ### [S11] NVIDIA 스택 활용 회고 (2/2)
 | 기술 | 역할 | 효과 |
 |------|------|------|
-| NeMo Curator | 중복/품질 필터 | X% 노이즈 제거 |
+| NeMo Curator | 중복/품질 + semantic cluster 다양성 | X% 노이즈 제거 |
 | NeMo Guardrails | 탈세 조력 차단 | N건 위험 표현 차단 |
-| NeMo Framework SFT | 모델 학습 | Before/After 증명 |
+| NeMo Framework SFT | Nemotron Nano LoRA | Before/After 증명 |
 | Nsight / Build API | 검증 | GPU 활용률 N% |
+| **Nemotron-Personas-Korea** | **질문 다양성 Seed** | 페르소나 10,000명 모사 |
 
 ### [S12] + Korean Law MCP (특별 섹션)
 - "법제처 Open API → 15개 도구로 압축한 오픈소스 MCP"

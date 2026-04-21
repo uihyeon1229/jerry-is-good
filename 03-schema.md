@@ -44,8 +44,30 @@ values = [
     "중급",    # 복수 공제·감면, 조건 충돌
     "고급",    # 세무조정, 쟁점 판례
 ]
-weights = [0.30, 0.45, 0.25]
+weights = [0.30, 0.45, 0.25]  # 독립 기본값
 ```
+
+### 축 4 (v2 추가): 페르소나
+
+Nemotron-Personas-Korea에서 10,000명을 샘플링하여 index 기반 Sampler로 투입.
+`cache/personas/korea_10k.jsonl` 각 행 전체가 Sampler 단위.
+
+사용 필드 (10):
+`age`, `gender`, `occupation`, `education_level`, `family_status`,
+`residence_type`, `annual_income_bracket`, `dependents_count`, `region`, `tone_preference`
+
+### 축 3↔축 4 조건부 매핑 (중요)
+
+페르소나의 `education_level`에 따라 **난이도 분포를 조건부로 변경**하여 자연스러움 확보:
+
+| education_level | 기초 | 중급 | 고급 |
+|-----------------|------|------|------|
+| 고졸이하 | 0.60 | 0.35 | 0.05 |
+| 전문대/학사 | 0.30 | 0.50 | 0.20 |
+| 석사/박사 | 0.10 | 0.40 | 0.50 |
+| 세무사/변호사 | 0.00 | 0.20 | 0.80 |
+
+DD의 `SamplerColumnConfig.conditional_params`로 구현. (실제 구현은 `pipeline/schema.py::NANDO_CONDITIONAL_ON_EDUCATION` 참조 예정)
 
 ## 3.3 컬럼 전체 정의
 
@@ -282,16 +304,25 @@ output:
 }
 ```
 
-## 3.9 목표 규모
+## 3.9 목표 규모 (v2 업데이트)
 
-| 단계 | 목표 건수 |
-|------|----------|
-| 원본 생성 | 1,000건 |
-| Guardrails 통과 (예상 90%) | 900건 |
-| Curator 통과 (예상 80%) | 720건 |
-| MCP verify 통과 (예상 95%) | 684건 |
-| Judge 3.5+ 통과 (예상 70%) | **~480건** |
-| SFT 학습 데이터 | 480건 (train) |
-| 평가 세트 | 20문제 (수작업) |
+| 단계 | 목표 건수 | 필터 근거 |
+|------|----------|----------|
+| S1 원본 생성 | 1,000건 | DD create |
+| S2 L2 citation 통과 (valid_ratio ≥ 0.7) | ~850건 | 예상 통과율 85% (L1 seed 주입 효과) |
+| S3 L3 calc 통과 (계산문제 중) | - | 계산문제만 필터, 비계산은 통과 |
+| S4 Guardrails 통과 | ~800건 | 탈세/PII 차단 |
+| S5 Curator 통과 (dedup + 품질) | ~600건 | semantic cluster 다양성 포함 |
+| Judge 3.5+ 통과 | **~500건** | SFT 학습 train.jsonl |
+| 평가 세트 | 20문제 (수작업) | Before/After 벤치마크 |
 
-→ **최종 목표: 고품질 500건** (학습용으로 충분, SFT 4시간 내 완료 가능)
+→ **최종 목표: 고품질 500건** (SFT 4~6시간 내 완료).
+
+### v2 차별화 KPI (발표 숫자)
+
+| KPI | 목표값 | 측정 방법 |
+|-----|-------|---------|
+| **cited_laws_valid_ratio 평균** | **≥ 0.90** | L2 citation_validator |
+| **calc_verified 비율** (계산문제) | **≥ 0.80** | L3 calc_validator |
+| **SFT Before→After legal_accuracy 상승폭** | **≥ +15%** | L2 검증자로 채점 |
+| 페르소나 분포 | 연령 3세대·지역 5권역 이상 커버 | personas 히스토그램 |

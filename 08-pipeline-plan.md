@@ -1,5 +1,7 @@
-# 8. track3 실전 파이프라인 구축 계획
+# 8. track3 파이프라인 구축 계획 (v1 — 스켈레톤)
 
+> ⚠️ **이 문서는 v1 (스켈레톤 PoC)입니다.** Smoke Test 통과 후 차별화 레버를 추가한 **실전 설계 v2**는 [09-pipeline-design-v2.md](./09-pipeline-design-v2.md) 를 보세요. 최신 구현은 v2 기준.
+>
 > **전제**: Brev H100 인스턴스 `jerryisgood-h100-80gib-vram-sxm5`에서 venv `/home/shadeform/track3` 이 이미 구성되어 있고, vLLM + NeMo 스택이 설치된 상태에서 실제 파이프라인을 구축하기 위한 실행 계획서. 논리 설계는 [02-architecture.md](./02-architecture.md) · [03-schema.md](./03-schema.md) 참조.
 
 ## 8.0 현 시점 환경 스냅샷 (Smoke Test 결과 반영)
