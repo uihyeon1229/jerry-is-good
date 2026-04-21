@@ -15,12 +15,15 @@ steps:
     field: reasoning_cot
     threshold: 0.85
 
-  # 3. 의미적 중복 제거 (bge-m3 임베딩 기반)
+  # 3. 의미적 중복 제거 (NVIDIA Llama-Nemotron Embed 1B v2, 2048 dim)
   - name: semantic_dedup
     type: SemanticDeduplicator
     field: question
     threshold: 0.90
-    model: BAAI/bge-m3
+    model: nvidia/llama-nemotron-embed-1b-v2
+    embedding_source: build_api
+    embedding_params:
+      input_type: passage
 
   # 4. 길이 필터
   - name: length_filter

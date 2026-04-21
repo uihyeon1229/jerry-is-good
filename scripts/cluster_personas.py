@@ -45,20 +45,16 @@ def load_personas(path: Path) -> list[dict]:
 
 
 def embed_all(personas: list[dict], batch_size: int, device: str) -> np.ndarray:
-    from sentence_transformers import SentenceTransformer
+    """NVIDIA Build API (llama-nemotron-embed-1b-v2) 기반 임베딩."""
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline.embed_nvidia import embed as nv_embed  # noqa: E402
 
     texts = [_persona_text(p) for p in personas]
-    print(f"=== loading bge-m3 on {device} ===", flush=True)
-    model = SentenceTransformer("BAAI/bge-m3", device=device)
-    print(f"=== encoding {len(texts)} personas (batch={batch_size}) ===", flush=True)
-    embs = model.encode(
-        texts,
-        batch_size=batch_size,
-        show_progress_bar=True,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-    )
-    return embs.astype(np.float32)
+    print(f"=== encoding {len(texts)} personas via NVIDIA Build API ===", flush=True)
+    return nv_embed(texts, input_type="passage", normalize=True).astype(np.float32)
 
 
 def cluster_and_pick(embs: np.ndarray, k: int, seed: int = 42):
