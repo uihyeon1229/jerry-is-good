@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from data_designer.config import (
     CategorySamplerParams,
+    CustomColumnConfig,
     LLMJudgeColumnConfig,
     LLMStructuredColumnConfig,
     LLMTextColumnConfig,
@@ -11,6 +12,7 @@ from data_designer.config import (
     SamplerType,
     Score,
 )
+from data_designer.config.custom_column import custom_column_generator
 
 from .schema import (
     NANDO_VALUES,
@@ -21,6 +23,7 @@ from .schema import (
     SEMOK_WEIGHTS,
     TaxMetadata,
 )
+from .seeds import seed_context_for
 
 
 # =====================================================================
@@ -77,9 +80,13 @@ COT_PROMPT = """당신은 한국 세법 전문가입니다. 다음 질문에 대
 질문:
 {{ question }}
 
+**아래는 {{ 세목 }}와 관련된 실제 한국 법령 조문입니다. 답변에서는 반드시 이 목록 안에 있는 조문만 인용하세요. 목록에 없는 조문 번호는 절대 만들어내지 마세요.**
+
+{{ seed_context }}
+
 지침:
 - 각 단계를 명확히 구분 (예: "1. 적용 조문", "2. 사실관계", "3. 계산/해석", "4. 결론")
-- 조문은 실제 존재하는 번호만 인용 (추정 번호 금지)
+- **조문 인용은 위 목록에서만** (법령명 + 조문번호를 반드시 명시)
 - 계산문제는 숫자 근거를 제시
 - 결론은 한두 문장으로 요약
 """
@@ -101,6 +108,19 @@ def question_column() -> LLMTextColumnConfig:
         name="question",
         prompt=QUESTION_PROMPT,
         model_alias="question_gen",
+    )
+
+
+@custom_column_generator(required_columns=["세목"])
+def _seed_context_generator(row: dict) -> str:
+    """L1 — 세목별 실제 조문 Top-N을 프롬프트 context로 주입."""
+    return seed_context_for(row.get("세목") or "")
+
+
+def seed_context_column() -> CustomColumnConfig:
+    return CustomColumnConfig(
+        name="seed_context",
+        generator_function=_seed_context_generator,
     )
 
 

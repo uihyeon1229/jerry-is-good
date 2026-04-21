@@ -11,6 +11,7 @@ from .columns import (
     nando_column,
     qtype_column,
     question_column,
+    seed_context_column,
     semok_column,
 )
 from .providers import default_model_configs
@@ -27,14 +28,17 @@ def build_config() -> DataDesignerConfigBuilder:
     b.add_column(qtype_column())
     b.add_column(nando_column())
 
-    # 2) 생성 컬럼 (의존성: 세목/질문유형/난이도 → question → reasoning_cot)
+    # 2) L1 — 세목별 조문 Seed Context 컬럼 (CoT 프롬프트에 주입)
+    b.add_column(seed_context_column())
+
+    # 3) 생성 컬럼 (의존성: 세목/질문유형/난이도 → question → reasoning_cot)
     b.add_column(question_column())
     b.add_column(cot_column())
 
-    # 3) 구조화 메타데이터
+    # 4) 구조화 메타데이터
     b.add_column(metadata_column())
 
-    # 4) 3축 Judge
+    # 5) 3축 Judge
     b.add_column(judge_column())
 
     return b
