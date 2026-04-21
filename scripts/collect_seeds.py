@@ -55,23 +55,33 @@ def _get(url: str) -> dict:
 
 
 def search_law(name: str) -> dict | None:
+    """정확 일치만 허용. 부분 일치(예: '민법' 검색 시 '난민법' 반환) 방지."""
     params = {
         "OC": OC,
         "target": "law",
         "query": name,
         "type": "JSON",
-        "display": 3,
+        "display": 10,  # 상위 10개 받아서 정확 일치 찾기
     }
     url = f"{BASE}/lawSearch.do?{urlencode(params)}"
     data = _get(url)
     laws = data.get("LawSearch", {}).get("law") or []
-    # 단일 결과는 dict, 다건은 list로 반환됨 → 정규화
     if isinstance(laws, dict):
         laws = [laws]
+    # 1) 현행 + 정확 이름 일치
     for law in laws:
         if law.get("법령명한글") == name and law.get("현행연혁코드") == "현행":
             return law
-    return laws[0] if laws else None
+    # 2) 현행 중 정확 일치 (어느 연혁이든)
+    for law in laws:
+        if law.get("법령명한글") == name:
+            return law
+    # 3) 정확 일치 없으면 경고 로그 후 None (이전의 "laws[0] 폴백" 제거)
+    print(
+        f"    !! '{name}' 정확 일치 없음. 상위 후보: "
+        + ", ".join(l.get("법령명한글", "?") for l in laws[:3])
+    )
+    return None
 
 
 def fetch_articles(mst: str) -> dict:
