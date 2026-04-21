@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+track3/
+venv/
+env/
+.venv/
+.env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data
+cache/
+output/
+*.jsonl
+*.parquet
+*.csv
+!seeds/sample.jsonl
+!benchmark/questions.jsonl
+
+# Models
+*.safetensors
+*.bin
+checkpoints/
+models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.key
+*.pem
+secrets/
+.secrets
+.OC
+law_oc.txt
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp
