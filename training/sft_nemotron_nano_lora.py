@@ -62,12 +62,25 @@ SYSTEM_PROMPT = (
 
 
 def load_train_data(path: Path) -> list[dict]:
-    """필터 + ChatML 구성."""
+    """ChatML(신) 또는 question/reasoning_cot(구) 포맷 모두 지원."""
     records = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         r = json.loads(line)
+
+        # Case 1: ChatML already (run_finalize_train 산출물)
+        msgs = r.get("messages")
+        if isinstance(msgs, list) and msgs:
+            assistant = next(
+                (m for m in msgs if m.get("role") == "assistant"), None
+            )
+            if not assistant or len((assistant.get("content") or "").strip()) < MIN_COT_LEN:
+                continue
+            records.append({"messages": msgs})
+            continue
+
+        # Case 2: legacy raw with question/reasoning_cot
         question = (r.get("question") or "").strip()
         cot = (r.get("reasoning_cot") or "").strip()
         if len(cot) < MIN_COT_LEN:

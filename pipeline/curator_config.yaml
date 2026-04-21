@@ -48,7 +48,7 @@ steps:
   # 7. Judge 품질 임계치
   - name: judge_threshold
     type: ThresholdFilter
-    field: quality_score.cot_depth
+    field: quality_score.cot_depth.score
     min_value: 3
 
   # 8. 의미 cluster 다양성 강제 (K-means + 클러스터당 상한)

@@ -1,0 +1,7 @@
+{
+  "input": 5,
+  "drop_regex_tax_evasion": 1,
+  "drop_regex_pii": 1,
+  "drop_llm_self_check": 2,
+  "output": 1
+}

@@ -57,3 +57,7 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# Local SFT backup artifacts (large jsonl, not for remote)
+backup_*/
+backup/
