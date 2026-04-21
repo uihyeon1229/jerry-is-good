@@ -18,6 +18,7 @@
 | [07-wsl-setup.md](./07-wsl-setup.md) | **WSL 환경 세팅 (Brev는 WSL 전용)** | **전원 필수** |
 | [08-pipeline-plan.md](./08-pipeline-plan.md) | Smoke Test 결과 + 스켈레톤 파이프라인 계획 (v1) | A, B |
 | [09-pipeline-design-v2.md](./09-pipeline-design-v2.md) | **차별화 5레버 확정판 (L1~L5) + 실전 설계** | **전원 필수** |
+| [10-architecture-overview.md](./10-architecture-overview.md) | **발표 PPT 초안 (15슬라이드 구성 + 실측 수치)** | **D 담당 + 전원** |
 
 > ⚠️ **Brev CLI가 WSL에서만 제대로 작동함**이 확인되어, 전원 **WSL2 + Ubuntu 22.04** 환경 통일 필수. 상세: [07-wsl-setup.md](./07-wsl-setup.md)
 
