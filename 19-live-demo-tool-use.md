@@ -117,6 +117,34 @@ UI 렌더링:
 
 ---
 
+## 3-A. 🔥 Smoke Test 실행 완료 (2026-04-22 10:59 KST)
+
+4건 질문 전부 **end-to-end 성공**. 전체 trace: `artifacts/toolcall_smoke_log.md` (234 라인).
+
+| # | 질문 | tool_call | MCP 응답 | 최종 답변 |
+|---|------|:---:|:---:|:---:|
+| 1 | "소득세법 제47조의 근로소득공제 내용을 알려주세요." | ✅ `search_korean_law(law_name='소득세법', article_no='47')` | ✅ 제47조 전문 | ✅ 5개 항목 구조화 요약 |
+| 2 | "민법 제1000조는 상속 순위를 어떻게 정하고 있나요?" | ✅ | ✅ | ✅ |
+| 3 | "근로기준법 제60조에 따라 3년 근속자의 연차유급휴가는 몇 일인가요?" | ✅ | ✅ | ✅ |
+| 4 | "부가가치세법 제26조 제1항 면세 대상 재화·용역" | ✅ | ✅ | ✅ "제2항 부수재화" 추가 언급 |
+
+**실행 환경 확정**:
+- vLLM: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16` + `--enable-auto-tool-choice --tool-call-parser qwen3_coder`
+- tmux 세션: `vllm_tool`, port 5000
+- 서빙 모델 이름: `nemotron`
+- Korean Law MCP: `https://korean-law-mcp.fly.dev/mcp?oc=didwjs12` — 안정 응답 확인
+
+**발표 임팩트 보장**: 최소 이 4개 질문은 발표장에서 라이브로 가도 성공 확률 매우 높음.
+
+**녹화 전략**:
+- VM은 headless 서버 → 영상 mp4 제작 불가
+- 대체 자료 이미 확보:
+  - `artifacts/toolcall_smoke_log.md` — 전체 2-turn trace (tool_call JSON + MCP 응답 + 최종 답변)
+  - 발표자는 이 로그를 슬라이드 텍스트로 복사하거나, **Streamlit UI를 로컬 브라우저에 띄워 OBS/Windows Win+G 로 직접 녹화** 권장
+  - 실제 mp4는 발표자 PC에서 생성
+
+---
+
 ## 4. 시연 질문 세트 (검증된 후보)
 
 | # | 질문 | 기대 tool_call | 기대 조문 |
