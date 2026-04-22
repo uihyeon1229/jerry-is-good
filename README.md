@@ -1,449 +1,449 @@
-# NVIDIA Nemotron 해커톤 Track C — 팀 브리핑
+# Jerry Is Good — Korean Legal Reasoning Synthetic Data Pipeline
 
-> **한국 세법 QA CoT 합성 데이터셋 생성 + NVIDIA NeMo 풀스택 활용**
+> **NVIDIA Nemotron 해커톤 2026 · Track C (합성 데이터 생성)**
 >
-> 최종 업데이트: 2026-04-21
-
-## 📂 문서 인덱스
-
-| 파일 | 내용 | 대상 독자 |
-|------|------|---------|
-| **README.md** | 전체 개요 (이 문서) | **전원 먼저 읽기** |
-| [01-strategy.md](./01-strategy.md) | 전략 배경 및 근거 | 전원 |
-| [02-architecture.md](./02-architecture.md) | 전체 아키텍처 다이어그램 + 파일 구조 | A, B 담당 |
-| [03-schema.md](./03-schema.md) | 데이터 스키마, Judge 루브릭, Guardrails/Curator 설정 | B, C 담당 |
-| [04-roles-timeline.md](./04-roles-timeline.md) | 4인 역할 + 시간대별 상세 타임라인 | **전원 필수** |
-| [05-pre-checklist.md](./05-pre-checklist.md) | 대회 전 준비 체크리스트 | **전원 필수** |
-| [06-presentation-outline.md](./06-presentation-outline.md) | 발표 15슬라이드 초안 + 예상 Q&A | D 담당 |
-| [07-wsl-setup.md](./07-wsl-setup.md) | **WSL 환경 세팅 (Brev는 WSL 전용)** | **전원 필수** |
-| [08-pipeline-plan.md](./08-pipeline-plan.md) | Smoke Test 결과 + 스켈레톤 파이프라인 계획 (v1) | A, B |
-| [09-pipeline-design-v2.md](./09-pipeline-design-v2.md) | **차별화 5레버 확정판 (L1~L5) + 실전 설계** | **전원 필수** |
-| [10-architecture-overview.md](./10-architecture-overview.md) | **발표 PPT 초안 (15슬라이드 구성 + 실측 수치)** | **D 담당 + 전원** |
-| [11-pipeline-advanced.md](./11-pipeline-advanced.md) | **v3 고도화 9종 + 스택 3종 확장 (총 12종)** | **B 담당** |
-| [12-presentation-final.md](./12-presentation-final.md) | **발표 최종 오버뷰 (단일 소스, 스택 12종·3단 비교·데모 스크립트)** | **D 담당 + 전원** |
-| [13-sample-outputs.md](./13-sample-outputs.md) | **대표 생성 샘플 모음 (PPT·내레이션 복붙용)** | **D 담당** |
-
-> ⚠️ **Brev CLI가 WSL에서만 제대로 작동함**이 확인되어, 전원 **WSL2 + Ubuntu 22.04** 환경 통일 필수. 상세: [07-wsl-setup.md](./07-wsl-setup.md)
-
-## 📌 목차
-1. [대회 개요](#1-대회-개요)
-2. [우리 팀 전략](#2-우리-팀-전략)
-3. [기술 스택](#3-기술-스택)
-4. [전체 아키텍처](#4-전체-아키텍처)
-5. [데이터 스키마 설계](#5-데이터-스키마-설계)
-6. [4인 역할 분담](#6-4인-역할-분담)
-7. [1박 2일 타임라인](#7-1박-2일-타임라인)
-8. [대회 전 준비사항 (지금 당장)](#8-대회-전-준비사항-지금-당장)
-9. [발표 메시지](#9-발표-메시지)
-10. [참고 링크](#10-참고-링크)
+> 한국 법률 CoT 합성 데이터를 생성하고, **정부 법령 DB**가 직접 채점하는 파이프라인.
+> LLM Judge가 아닌 외부 결정론적 검증 → 환각 조문 **80% → 0%**, 실존 조문 커버리지 **35% → 79.5%**.
 
 ---
 
-## 1. 대회 개요
+## 🎯 핵심 결과 (2026-04-22 실측)
 
-| 항목 | 내용 |
-|------|------|
-| **대회** | NVIDIA Nemotron 해커톤 **Track C — 합성 데이터 생성** |
-| **기간** | 1박 2일 (약 30~36시간) |
-| **팀 구성** | 4인 (회계법인) |
-| **제공 자원** | Brev.dev $1000 크레딧 (H100 사용 가능), Friendli AI 크레딧 |
-| **가이드** | https://nemotron-dev-materials-q9notf2ox.brevlab.com/ |
-| **공식 문서** | https://nvidia-nemo.github.io/DataDesigner/latest/ |
-| **팀 인스턴스** | `jerryisgood-h100-80gib-vram-sxm5` (H100, vLLM 0.17.1 @ `/home/shadeform/track3`) |
-
-### Track C가 요구하는 것
-- Nemotron 3 + NeMo Data Designer를 활용한 합성 데이터 파이프라인
-- 스키마 기반 선언적 데이터 생성
-- LLM-as-a-Judge로 품질 평가
+| 지표 | Before | After | 검증자 |
+|------|:---:|:---:|:---:|
+| **Hallucinated citations** | 80% | **0%** | Korean Law MCP (정부 DB) |
+| **Cited articles found in gov.kr** | 35% | **79.5%** | Korean Law MCP (정부 DB) |
+| **Guardrails negative test** | — | **5 / 5** | 문서 [15](./15-guardrails-negative-validation.md) |
+| **SFT loss (FP8→BF16 전환)** | 226 | **0.395** (600×) | 문서 [14](./14-stack-change-sft-unsloth.md) |
+| **SFT 속도 (Unsloth 채용)** | 110s/step | **13s/step** (8.5×) | 문서 [14](./14-stack-change-sft-unsloth.md) |
+| **Qwen 1.5B ablation · 면책 고지** | 0% | **100%** (+100pp) | 문서 [21](./21-model-size-ablation-qwen15b.md) |
+| **Qwen 1.5B ablation · expected_laws cov** | 0.242 | **0.308** (+27%) | 문서 [21](./21-model-size-ablation-qwen15b.md) |
 
 ---
 
-## 2. 우리 팀 전략
-
-### 🎯 핵심 전략
-> **"데이터 결과물 품질"보다 "NVIDIA 스택을 얼마나 잘 활용했는가"로 승부한다.**
-
-1박 2일 짧은 기간에 데이터 품질 경쟁으로 남들과 차별화하기 어렵다. 주관사(NVIDIA)가 가장 보고 싶어하는 것은 **자기 기술의 End-to-End 활용 사례**이므로, 여기에 집중한다.
-
-### 5대 차별화 레버 (상세: [09-pipeline-design-v2.md](./09-pipeline-design-v2.md))
-
-| # | 레버 | 효과 |
-|---|------|------|
-| **L1** | 법제처 조문을 프롬프트 **Seed Context로 주입** | 환각 **사전 차단** |
-| **L2** | 법제처 API로 **결정론적 조문 존재성 검증** | 환각 **사후 제거**, 객관 KPI 확보 |
-| **L3** | 계산 문제의 수치를 **Python(sympy)으로 재계산·검증** | 수치 **정답 보장** |
-| **L4** | **Nemotron-Personas-Korea**로 질문 다양성 주입 (+조건부 난이도 매핑) | 데이터셋 **쓸모** 차별화 |
-| **L5** | Nemotron + MCP **Tool-use 라이브 데모** | 발표 **임팩트** |
-
-**한 문장 서사**: *"Nemotron-Personas로 질문을 만들고, Nemotron으로 답하고, 법제처로 검증하고, Nemotron을 파인튜닝해 실증한다."*
-
-### 도메인 차별화
-- 회계법인 소속 → **세법 CoT**: 감사보다 심사위원 이해도 높고, CoT 구조(조문→사실→계산→결론) 명확
-- 실무자 검증 가능 (도메인 신뢰성 서사)
-
-### 왜 세법인가? (감사 vs 세법)
-
-| 관점 | 감사 | 세법 ✅ |
-|------|------|--------|
-| 공개 데이터 | 중 (KSA, DART) | **상** (국세청/법제처/판례) |
-| 심사위원 이해도 | 낮음 (전문 용어) | **높음** (누구나 세금 경험) |
-| CoT 적합성 | 중 (판단 위주) | **상** (조문→사실→계산→결론) |
-| 검증 용이성 | 낮음 | **중~상** (계산 결과 확인) |
-
-### 왜 Nano 30B FP8인가? (Super vs Nano)
-
-| 변형 | 필요 GPU | Day1 세팅 시간 | 추천 |
-|------|---------|---------------|------|
-| Super 120B BF16 | 4x H100 | 오래 걸림 | ❌ |
-| Super 120B FP8 | 2x H100 | 중 | △ |
-| **Nano 30B FP8** | **1x H100** | **짧음** | **✅** |
-| Nano 30B NVFP4 | 1x B200 | 중 | △ (B200 확보 시) |
-
-→ **1장 H100**만으로 충분, 발표에서도 "효율성" 어필 가능.
-
----
-
-## 3. 기술 스택
-
-### 🔷 NVIDIA 스택 (9종)
-
-| # | 기술 | 역할 |
-|---|------|------|
-| 1 | **Brev.dev** | H100 GPU 프로비저닝 (스폰서) |
-| 2 | **Nemotron 3 Nano FP8** | 데이터 생성 LLM (1x H100) |
-| 3 | **vLLM + Reasoning Parser (nano_v3)** | OpenAI 호환 서빙, thinking 모드 |
-| 4 | **NeMo Data Designer** | 스키마 기반 합성 파이프라인 |
-| 5 | **NeMo Curator** | 중복제거 + 품질필터 + 의미 cluster 다양성 |
-| 6 | **NeMo Guardrails** | 탈세 조력/법률 탈선 차단 |
-| 7 | **NeMo Framework (SFT)** | Nemotron 3 Nano 30B FP8 LoRA 파인튜닝 |
-| 8 | **NVIDIA Build API / Nsight** | 비교 검증 + GPU 프로파일 증빙 |
-| 9 | **Nemotron-Personas-Korea** | 질문 다양성 Seed (+ 조건부 난이도 매핑) |
-
-### 🔶 외부 통합
-
-| 기술 | 역할 |
-|------|------|
-| **Korean Law MCP** (`chrisryugj/korean-law-mcp`) | 법제처 공식 조문/판례 조회 + `verify_citations` 환각 검증 |
-| **법제처 Open API** | MCP 데이터 소스 (무료 OC 키 1분 발급) |
-
----
-
-## 4. 전체 아키텍처
+## 🏗️ 아키텍처 요약
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Day1 오전: 시드 확보                                    │
-│                                                         │
-│  Korean Law MCP                                         │
-│    ├ search_law / get_law_text  → 조문 300~500개       │
-│    └ search_decisions           → 판례·해석례 200개     │
-│                                  ↓ JSONL 캐시           │
-└─────────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│ Day1 오후: 데이터 생성 파이프라인                       │
-│                                                         │
-│  Brev H100 → vLLM + Nemotron 3 Nano FP8                │
-│                                                         │
-│  NeMo Data Designer                                     │
-│    ├ SamplerColumn    (세목 × 질문유형 × 난이도)       │
-│    ├ LLMTextColumn    (question, MCP 조문 주입)        │
-│    ├ LLMTextColumn    (CoT 풀이, 조문 인용)            │
-│    ├ LLMStructuredColumn (applied_law_mst, answer)    │
-│    └ LLMJudgeColumn   (법령정확성 × CoT깊이 × 유용성)  │
-└─────────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│ Day1 저녁: 필터링                                       │
-│                                                         │
-│  NeMo Guardrails  (탈세 조력 / PII 차단)               │
-│    → NeMo Curator (중복제거 + 품질필터)                 │
-│    → MCP verify_citations (★ 최종 환각 검증)           │
-└─────────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│ Day1 밤 ~ Day2 새벽: 학습 (백그라운드)                  │
-│                                                         │
-│  NeMo Framework SFT                                     │
-│    대상: Nemotron 3 Nano 30B FP8 (LoRA)                 │
-│    입력: ChatML messages                                │
-│    학습 시간: 4~6시간                                    │
-└─────────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│ Day2 오전: 평가                                         │
-│                                                         │
-│  Before/After 벤치마크 (20문제)                         │
-│    → MCP로 정답 교차검증                                │
-│    → Nsight GPU 프로파일 캡처                           │
-└─────────────────────────────────────────────────────────┘
+Nemotron-Personas-Korea (1M → 10K sample → k-means → 200 대표)
+    + 세목 × 질문유형 × 난이도 grid
+    │
+    ▼
+NeMo Data Designer ─► Nemotron 3 Nano FP8 (vLLM) ─► 999 raw
+    │
+    ▼
+Korean Law MCP verify_citations (환각 조문 검출 ← 정부 DB)
+    │
+    ▼
+Build API Super 49B 교차검증 + A1 partial refine
+    │
+    ▼
+NeMo Curator 8-stage (dedup · length · language · citation · judge · cluster balance)
+    │                                                                  999 → 901
+    ▼
+NeMo Guardrails 2-tier (Regex + LLM self_check_output)       901 → 901
+    │                                                                  negative 5/5
+    ▼
+ChatML Finalize ─► 803 train / 42 eval
+    │
+    ▼
+Unsloth SFT (Nemotron 3 Nano 30B A3B BF16 + LoRA r=16)        loss 226→0.395 (66min)
+    │
+    ▼
+Benchmark (score_judge + score_qualitative + NeMo Evaluator wrap)
+```
+
+**스택 14종**: Brev H100 · Nemotron 3 Nano BF16/FP8 · vLLM · NeMo Data Designer · NeMo Curator · NeMo Guardrails · NeMo Evaluator · NVIDIA Build API (embed + cross-verify) · NVIDIA NIM · Nemotron-Personas-Korea · Nsight Systems · Unsloth · Korean Law MCP · sklearn(cuML 대체) — 상세 [문서 22](./22-tech-stack-and-pipeline-summary.md) / [문서 18](./18-stack-usage-actual-vs-planned.md).
+
+---
+
+## 🛠️ 환경 설정
+
+### 재현 대상
+
+- **1× NVIDIA H100 80GB SXM5** (Brev Cloud 검증; A100 80GB도 동작)
+- Ubuntu 22.04
+- Python 3.10
+
+### 1) 레포 클론
+
+```bash
+git clone https://github.com/uihyeon1229/jerry-is-good.git
+cd jerry-is-good
+```
+
+### 2) 시스템 환경
+
+```bash
+# (Brev 인스턴스의 경우) 기본 파이프라인용 venv
+python3 -m venv ~/venv_pipeline
+source ~/venv_pipeline/bin/activate
+
+pip install -U pip
+pip install -r requirements.txt   # NeMo Data Designer / Curator / Guardrails / Evaluator, vLLM, Build API 등
+pip install datasketch             # Curator fuzzy dedup용
+pip install python-pptx streamlit openai mcp
+```
+
+### 3) SFT 전용 venv (Unsloth + torch 2.7.1)
+
+```bash
+# /ephemeral 가 없으면 ~/venvs 로 변경 가능
+python3 -m venv /ephemeral/venvs/unsloth
+source /ephemeral/venvs/unsloth/bin/activate
+
+TMPDIR=/ephemeral/tmp PIP_CACHE_DIR=/ephemeral/cache/pip \
+uv pip install "torch==2.7.1" "triton>=3.3.0" numpy pillow torchvision bitsandbytes \
+    "transformers==4.56.2" "trl==0.22.2" \
+    "unsloth_zoo @ git+https://github.com/unslothai/unsloth-zoo" \
+    "unsloth @ git+https://github.com/unslothai/unsloth" \
+    datasets accelerate peft pyyaml
+
+# Mamba kernels (--no-build-isolation 필수)
+TMPDIR=/ephemeral/tmp PIP_CACHE_DIR=/ephemeral/cache/pip \
+pip install --no-build-isolation "mamba_ssm==2.2.5" "causal_conv1d==1.5.2"
+```
+
+### 4) 필수 환경변수
+
+```bash
+export LAW_OC=<본인 법제처 Open API OC>          # Korean Law MCP 인증
+export NVIDIA_BUILD_API_KEY=nvapi-xxxxx          # Build API (embed + cross-verify)
+export VLLM_BASE_URL=http://localhost:5000/v1
+export VLLM_MODEL=nemotron
+export USE_PERSONA_AFFINITY=1
+export PIPELINE_MAX_PARALLEL=16
+```
+
+### 5) vLLM 기동 (Nemotron 3 Nano 30B, 생성·서빙용)
+
+```bash
+# 생성·추론용 (FP8)
+tmux new -d -s vllm_gen 'python -m vllm.entrypoints.openai.api_server \
+    --model nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8 \
+    --served-model-name nemotron \
+    --host 0.0.0.0 --port 5000 \
+    --max-model-len 8192 --trust-remote-code \
+    --gpu-memory-utilization 0.92'
+
+# Tool-use 데모용 (파서 포함)
+#   --enable-auto-tool-choice --tool-call-parser qwen3_coder  추가
+```
+
+상세: 문서 [22 §5](./22-tech-stack-and-pipeline-summary.md), [19](./19-live-demo-tool-use.md).
+
+---
+
+## 📈 학습 방법
+
+### 합성 데이터 생성 → SFT 전 과정
+
+```bash
+# [0] 페르소나 준비 (한 번만)
+python -m pipeline.fetch_personas           # 1M → 10K 샘플
+python -m scripts.cluster_personas          # 10K → 200 대표 (NVIDIA embed + k-means)
+
+# [1] L1 raw 생성 (Nemotron Data Designer, ~55분)
+python -m pipeline.run_generate --mode create --n 1000 --name tax_cot_v3 \
+    --out output/raw/tax_cot_v3_1000.jsonl
+
+# [2] L2 조문 실존 검증 (Korean Law MCP)
+python -m pipeline.run_verify_citations \
+    --input output/raw/tax_cot_v3_1000.jsonl \
+    --output output/verified/tax_cot_v3_verified.jsonl
+
+# [3] A1 부분 refine (저품질 세목만 재생성)
+python -m pipeline.run_partial_refine \
+    --input output/verified/tax_cot_v3_verified.jsonl \
+    --output output/refined/tax_cot_v3_refined.jsonl
+
+# [4] NeMo Curator 8단계 (~11분)
+python -m pipeline.run_curator --config pipeline/curator_config.yaml \
+    --input output/refined/tax_cot_v3_refined.jsonl \
+    --output output/curated/tax_cot_v3_curated.jsonl
+
+# [5] NeMo Guardrails 2-tier (~40초, Build API 경유)
+python -m pipeline.run_guardrails --config pipeline/guardrails/config.yml \
+    --input output/curated/tax_cot_v3_curated.jsonl \
+    --output output/safe/tax_cot_v3_safe.jsonl \
+    --base-url https://integrate.api.nvidia.com/v1 \
+    --model "nvidia/llama-3.3-nemotron-super-49b-v1"
+
+# [6] ChatML Finalize (train/eval split)
+python -m pipeline.run_finalize_train \
+    --input output/safe/tax_cot_v3_safe.jsonl \
+    --output-dir output/final
+# → output/final/train.jsonl (803) + eval.jsonl (42) + filter_stats.json
+```
+
+### SFT 실행 (Unsloth, H100 1장, ~66분)
+
+```bash
+# Unsloth venv 활성화
+source /ephemeral/venvs/unsloth/bin/activate
+
+# 2-phase 자동 체인 (Phase 1 dry-run 500×1ep → Phase 2 전량 3ep resume)
+bash scripts/launch_sft_chain.sh
+
+# 출력: training/checkpoints/tax_cot_lora_v2/final (LoRA 어댑터)
+```
+
+개별 실행:
+
+```bash
+# Phase 1 dry-run
+SFT_MODEL=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+TRAIN_INPUT=output/final/train.jsonl \
+OUTPUT_DIR=training/checkpoints/tax_cot_lora_v2 \
+NUM_EPOCHS=1 SFT_MAX_SAMPLES=500 SFT_RESUME=0 LR=2e-4 \
+python training/sft_unsloth.py
+
+# Phase 2 full
+NUM_EPOCHS=3 SFT_MAX_SAMPLES=0 SFT_RESUME=1 LR=2e-4 \
+python training/sft_unsloth.py
+```
+
+### (부록) Model Size Ablation — Qwen 2.5-1.5B
+
+```bash
+UNSLOTH_FORCE_COMPILE=0 ATTN_IMPL=sdpa \
+SFT_MODEL=Qwen/Qwen2.5-1.5B-Instruct \
+TRAIN_INPUT=output/final/train.jsonl \
+OUTPUT_DIR=/ephemeral/training_checkpoints/qwen15b_tax_lora \
+NUM_EPOCHS=3 BATCH_SIZE=4 GRAD_ACCUM=2 LR=2e-4 \
+python training/sft_unsloth.py
+# → 132초에 학습 완료, train_loss 0.601
 ```
 
 ---
 
-## 5. 데이터 스키마 설계
+## 🔬 평가 단계
 
-### 대상 세목 (4개)
+### 1) vLLM에 Base + LoRA 핫어태치 서빙
 
-| 세목 | 하위 분류 | 비중 |
-|------|----------|------|
-| **소득세** | 근로소득, 사업소득 | 30% |
-| **상속·증여세** | 상속공제, 증여재산가액 | 20% |
-| **법인세** | 세무조정, 감가상각 | 25% |
-| **부가가치세** | 과세·면세, 매입세액공제 | 25% |
-
-### Sampler 축 (결정론적 분포)
-
-```python
-# 세목
-세목 = ["소득세-근로", "소득세-사업", "상속세", "증여세",
-        "법인세", "부가가치세"]
-
-# 질문유형
-질문유형 = ["계산문제", "법령해석", "사례적용", "개념설명"]
-
-# 난이도
-난이도 = ["기초(신고실무)", "중급(공제·감면)", "고급(세무조정·쟁점)"]
+```bash
+tmux new -d -s vllm_serve 'python -m vllm.entrypoints.openai.api_server \
+    --model nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+    --served-model-name nemotron-base \
+    --enable-lora \
+    --lora-modules tax_lora=training/checkpoints/tax_cot_lora_v2/final \
+    --max-lora-rank 16 --max-loras 2 \
+    --host 0.0.0.0 --port 5000 --max-model-len 8192 \
+    --trust-remote-code --gpu-memory-utilization 0.90'
 ```
 
-### LLM 컬럼
+### 2) Before/After 답변 수집
 
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| `applied_law_context` | MCP Pull | 해당 세목 관련 조문 (Jinja context) |
-| `question` | LLMTextColumn | 납세자/실무자 관점 질문 생성 |
-| `reasoning_cot` | LLMTextColumn | 적용조문 → 사실관계 → 계산/해석 → 결론 |
-| `metadata` | LLMStructuredColumn | `{applied_law_mst, final_answer, concepts[]}` |
-| `quality_score` | LLMJudgeColumn | 법령정확성 / CoT깊이 / 실무유용성 (각 1-5) |
-| `chat_formatted` | ExpressionColumn | SFT용 ChatML 형식 |
+```bash
+# Base
+VLLM_MODEL=nemotron-base python -m benchmark.run_generate \
+    --questions benchmark/questions.jsonl \
+    --output benchmark/answers_base.jsonl --tag base \
+    --model nemotron-base --max-tokens 3000 --temperature 0.3
 
-### Judge 루브릭 (3축)
+# Fine-tuned
+VLLM_MODEL=tax_lora python -m benchmark.run_generate \
+    --questions benchmark/questions.jsonl \
+    --output benchmark/answers_sft.jsonl --tag sft \
+    --model tax_lora --max-tokens 3000 --temperature 0.3
+```
 
-1. **법령정확성 (1-5)**
-   - 5점: 조문 번호·내용 모두 정확, 개정 반영
-   - 3점: 방향은 맞으나 조문 번호 애매
-   - 1점: 잘못된 조문 인용
+### 3) 4축 정량 채점 (score_judge) + 정성 보조 (score_qualitative) + 샘플 diff
 
-2. **CoT 깊이 (1-5)**
-   - 5점: 조문→사실→계산→결론 4단계 명확
-   - 3점: 단계는 있으나 설명 얕음
-   - 1점: 답만 있고 추론 과정 없음
+```bash
+NVIDIA_BUILD_API_KEY=... LAW_OC=... python -m benchmark.score_judge \
+    --before benchmark/answers_base.jsonl \
+    --after benchmark/answers_sft.jsonl \
+    --output benchmark/report.md
 
-3. **실무 유용성 (1-5)**
-   - 5점: 실제 납세자/실무자가 바로 적용 가능
-   - 3점: 맞지만 너무 교과서적
-   - 1점: 추상적, 현실 괴리
+python -m benchmark.score_qualitative \
+    --before benchmark/answers_base.jsonl \
+    --after benchmark/answers_sft.jsonl \
+    --output benchmark/report_qualitative.md
 
-### Guardrails 규칙
+python -m benchmark.extract_diff_samples \
+    --before benchmark/answers_base.jsonl \
+    --after benchmark/answers_sft.jsonl \
+    --top-k 4 --output benchmark/sample_diffs.md
+```
 
-- ❌ 세무사 자격 사칭 표현
-- ❌ 탈세 조력 (절세 vs 탈세 구분)
-- ❌ 구체적 개인정보/법인명 생성
-- ❌ 폐지된 조문 인용 (시드에 "2024년 기준" 명시)
+### 4) NeMo Evaluator 공식 스키마로 래핑
 
----
+```bash
+python -m benchmark.nemo_evaluator_wrap \
+    --in benchmark/report.json \
+    --out benchmark/nemo_evaluator_result.json
+```
 
-## 6. 4인 역할 분담
-
-| 역할 | Day1 | Day2 | 필요 역량 |
-|------|------|------|---------|
-| **A. 인프라/서빙** | Brev H100, vLLM + Nemotron 기동, SFT 실행 | Nsight 캡처, 모델 배포 | GPU·리눅스 능숙 |
-| **B. 파이프라인** | Data Designer 스키마, Curator/Guardrails 통합 | 필터링 튜닝 | Python·ML 경험 |
-| **C. 도메인/시드** | MCP 시드 수집, Judge 루브릭, 품질 검수 | 생성물 큐레이션 | **세무 실무자 필수** |
-| **D. 평가/발표** | 벤치마크 20문제 구성, 발표 틀 | Before/After 비교, 발표자료 | 스토리텔링 |
-
-> **현재 담당 미정 — 팀원 배정 필요**
+**채점자 편향 주의**: 우리는 **외부 Korean Law MCP(정부 DB)** 와 **NVIDIA Build API Super 49B** 를 독립 평가자로 쓰고, L2 valid_ratio 는 학습 필터에 사용했으므로 **보조 지표**로만 다룹니다. 상세: 문서 [17 §1.1](./17-benchmark-report-and-analysis.md).
 
 ---
 
-## 7. 1박 2일 타임라인
+## 🎥 데모 실행 가이드
 
-### Day 1
+### Demo 1 — Tool-use 라이브 (발표 최대 하이라이트)
 
-| 시간 | 작업 | 담당 |
-|------|------|------|
-| 09:00–12:00 | Brev+vLLM 기동 / Data Designer 스캐폴딩 / MCP 시드 수집 / 벤치마크 설계 | 병렬 (A/B/C/D) |
-| 12:00–14:00 | 점심 + 첫 통합 (Sampler→LLMText 5건 미리보기) | 전원 |
-| 14:00–18:00 | 본 파이프라인 완성 + Curator/Guardrails/MCP verify 연결 | 전원 |
-| 18:00–22:00 | **500~1000건 본 생성** (백그라운드) + 품질 검수 / 발표 초안 | 전원 |
-| 22:00–       | **SFT 학습 시작** (Nemotron 3 Nano 30B FP8 + LoRA, 백그라운드 밤샘) | A |
+Nemotron이 질문을 받자마자 `search_korean_law` tool을 호출 → Korean Law MCP가 법제처 DB에서 조문 실시간 조회 → Nemotron이 그 조문 원문을 인용해 최종 답변.
 
-### Day 2
+```bash
+# vLLM 기동 (tool-use 파서 포함)
+tmux new -d -s vllm_tool 'python -m vllm.entrypoints.openai.api_server \
+    --model nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16 \
+    --served-model-name nemotron \
+    --host 0.0.0.0 --port 5000 --max-model-len 8192 \
+    --trust-remote-code --gpu-memory-utilization 0.92 \
+    --enable-auto-tool-choice --tool-call-parser qwen3_coder'
 
-| 시간 | 작업 |
-|------|------|
-| 06:00–09:00 | SFT 완료 확인 → Before/After 벤치마크 실행 |
-| 09:00–12:00 | 결과 분석, 실패 사례 개선, 발표용 하이라이트 10건 큐레이션 |
-| 12:00–14:00 | 발표자료 최종화 (NVIDIA 스택 8종 활용 명시) |
-| 14:00–       | 리허설 → 발표 → 제출 |
+# CLI 실행
+LAW_OC=... python demo/nemotron_tool_call.py \
+    --q "소득세법 제47조의 근로소득공제 내용을 알려주세요."
 
----
+# 또는 Streamlit 3단계 UI (1차 tool_call → MCP → 2차 답변)
+LAW_OC=... VLLM_BASE_URL=http://localhost:5000/v1 VLLM_MODEL=nemotron \
+    streamlit run demo/app_toolcall.py --server.port 8700 --server.address 0.0.0.0
+```
 
-## 8. 대회 전 준비사항 (지금 당장)
+Smoke test 결과 (4/4 성공): [`artifacts/toolcall_smoke_log.md`](./artifacts/toolcall_smoke_log.md) · 실행 가이드: [문서 19](./19-live-demo-tool-use.md).
 
-> **대회 시작 전에 마쳐두면 Day1이 훨씬 편해집니다.** 팀원 아무나 가능.
+### Demo 2 — Base vs Fine-tuned 병렬 비교
 
-### ✅ 체크리스트
+동일 질문을 좌(원본)·우(우리 LoRA) 두 모델에 동시 발송, 차이를 시각적으로 확인.
 
-#### [0] WSL2 환경 세팅 ⚠️ **전원 필수, 최우선**
-- **왜**: Brev CLI가 **Windows 네이티브에서 정상 동작 안 함**. WSL2 전용 대응.
-- **누가**: 전원 (Windows 사용자 한정)
-- **어디**: 본인 로컬 PC → WSL2 Ubuntu 22.04
-- **소요**: 30분~1시간 (드라이버/CUDA 포함)
-- **상세 가이드**: **[07-wsl-setup.md](./07-wsl-setup.md)**
-- **핵심 체크**:
-  - [ ] `wsl -l -v` → Ubuntu-22.04 설치
-  - [ ] WSL 내부에서 `nvidia-smi` GPU 정보 출력
-  - [ ] Brev CLI 설치 + `brev login` 성공
-  - [ ] Node.js 20+ 설치 (MCP용)
-  - [ ] VSCode Remote - WSL 확장
+```bash
+# Qwen 1.5B 기준 비교 (ablation, 가장 차이 큼)
+tmux new -d -s vllm_qwen 'python -m vllm.entrypoints.openai.api_server \
+    --model Qwen/Qwen2.5-1.5B-Instruct \
+    --served-model-name qwen15b-base \
+    --enable-lora \
+    --lora-modules qwen_tax_lora=/ephemeral/training_checkpoints/qwen15b_tax_lora/final \
+    --max-lora-rank 16 --max-loras 2 \
+    --host 0.0.0.0 --port 5000 --max-model-len 4096 \
+    --trust-remote-code --gpu-memory-utilization 0.60'
 
-#### [1] 법제처 Open API 키 발급 (1분, 무료)
-- **누가**: 누구든 1명 (C 담당이 이상적)
-- **어디서**: https://open.law.go.kr/LSO/openApi/guideList.do
-- **결과물**: `OC` 키 (예: `honggildong`)
-- **주의**: 발급받은 키는 팀 공용으로 공유
+MODEL_BASE=qwen15b-base MODEL_FT=qwen_tax_lora \
+LABEL_BASE="⚪ Base (Qwen 2.5-1.5B)" LABEL_FT="🟢 Fine-tuned (+ 한국 법률 LoRA)" \
+VLLM_BASE_URL=http://localhost:5000/v1 \
+    streamlit run demo/app_compare.py --server.port 8700 --server.address 0.0.0.0
+```
 
-#### [2] Brev.dev 계정 가입 + 크레딧 확인 (5분)
-- **누가**: A 담당
-- **어디서**: https://brev.dev
-- **확인사항**:
-  - [ ] 스폰서 크레딧 $1000 연동 완료
-  - [ ] H100 인스턴스 생성 절차 숙지
-  - [ ] SSH 접속 및 key 세팅
+### Windows에서 영상 녹화
 
-#### [3] Korean Law MCP 로컬 테스트 (10분)
-- **누가**: B 또는 C 담당
-- **어디서**: **WSL 터미널** (Ubuntu)
-- **명령**:
-  ```bash
-  export LAW_OC=발급받은키
-  npx korean-law-mcp "소득세법 제20조"
-  ```
-- **성공 기준**: 소득세법 제20조 조문 텍스트가 출력되면 OK
-
-#### [4] HuggingFace 계정 + 토큰 발급 (5분)
-- **누가**: A 담당
-- **어디서**: https://huggingface.co/settings/tokens
-- **목적**: Nemotron 3 Nano 30B A3B FP8 모델 다운로드 (생성 + SFT LoRA 공통)
-- **권한**: Read 권한으로 충분
-
-#### [5] 팀 공용 저장소 준비 (5분)
-- **누가**: 아무나
-- **어디**: Git repo 또는 공유 드라이브
-- **내용**:
-  - 이 README
-  - 생성될 시드 JSONL
-  - 벤치마크 20문제 초안
-  - 발표자료 초안
+로컬 Windows 쪽은 [`demo/record_windows_guide.md`](./demo/record_windows_guide.md) — PowerShell Claude Code에 문서 통째로 전달하면 ffmpeg 설치·Chrome 오픈·화면 녹화·종료까지 자동화.
 
 ---
 
-### 🎯 역할별 사전 학습 권장 (선택사항)
+## 📁 디렉토리 구조
 
-| 역할 | 읽어둘 것 |
-|------|----------|
-| A | [vLLM 문서](https://docs.vllm.ai), [Nemotron 3 Nano 카드](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8) |
-| B | [NeMo Data Designer 문서](https://nvidia-nemo.github.io/DataDesigner/latest/), [NeMo Curator 문서](https://docs.nvidia.com) |
-| C | [Korean Law MCP GitHub](https://github.com/chrisryugj/korean-law-mcp), 국세법령정보시스템 사용법 |
-| D | 세목별 주요 쟁점 10개씩 미리 노트 |
-
----
-
-## 9. 발표 메시지
-
-### 🎤 One-liner (발표 첫 문장)
-> "한국 법제처 Open API와 NVIDIA NeMo 풀스택을 통합하여, **환각 없는** 한국 세법 Chain-of-Thought 데이터셋을 생성하고, 생성한 데이터로 실제 모델을 파인튜닝한 End-to-End 파이프라인입니다."
-
-### 🏆 심사위원 어필 포인트
-
-| 사용 기술 | 발표 멘트 |
-|---------|----------|
-| **Nemotron 3 Nano FP8** | "1x H100으로 Nano 30B FP8 구동, 120B급 품질을 비용 효율적으로 실증" |
-| **Reasoning Parser** | "thinking 토큰을 분리해 CoT 품질 가시화" |
-| **Data Designer** | "스키마 선언만으로 세목 × 질문유형 × 난이도 × N 조합 자동 생성" |
-| **NeMo Curator** | "의미적 중복 X%, 저품질 Y% 제거" (수치 제시) |
-| **NeMo Guardrails** | "탈세 조력 표현 Z건 자동 차단" |
-| **NeMo Framework SFT** | "Nemotron 3 Nano Before/After 벤치마크 점수 N% 상승" |
-| **Brev.dev** | "30분만에 H100 세팅 완료, 크레딧 효율 최적화" |
-| **Korean Law MCP** | "법제처 공식 조문 기반, verify_citations로 환각 사전 차단" |
-
-### 📊 발표 구조 (10~15분 기준)
-
-1. **문제 제기** (1분) — 한국어 법률 CoT 데이터 희소, LLM 환각 위험
-2. **솔루션** (1분) — NVIDIA 스택 + 법제처 API 통합
-3. **아키텍처** (2분) — 위의 아키텍처 다이어그램 한 장
-4. **라이브 데모** (3분) — 생성 샘플 3개 + SFT Before/After
-5. **품질 지표** (2분) — Judge 점수, Curator 필터링율, 벤치마크
-6. **NVIDIA 스택 8종 회고** (3분) — 각 기술별 "썼다/왜/효과"
-7. **확장 가능성** (1분) — 다른 법 영역, 다국어, 더 큰 모델
-8. **Q&A** (2분)
-
----
-
-## 10. 참고 링크
-
-### NVIDIA 공식
-- [NeMo Data Designer 문서](https://nvidia-nemo.github.io/DataDesigner/latest/)
-- [NeMo Data Designer GitHub](https://github.com/NVIDIA-NeMo/DataDesigner)
-- [vLLM 문서](https://docs.vllm.ai)
-- [Nemotron 3 Nano FP8 모델 카드](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8)
-- [Nemotron 3 Super FP8 모델 카드](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8)
-- [NVIDIA Build API](https://build.nvidia.com)
-
-### 외부 통합
-- [Korean Law MCP GitHub](https://github.com/chrisryugj/korean-law-mcp)
-- [법제처 Open API 신청](https://open.law.go.kr/LSO/openApi/guideList.do)
-- [국세법령정보시스템](https://txsi.hometax.go.kr/)
-- [조세심판원 결정례](https://www.tt.go.kr/)
-
-### 해커톤 자료
-- [대회 가이드 페이지](https://nemotron-dev-materials-q9notf2ox.brevlab.com/)
+```
+jerry-is-good/
+├── pipeline/                   # NeMo Data Designer + Curator + Guardrails 파이프라인
+│   ├── builder.py / columns.py / providers.py / refine_loop.py
+│   ├── run_generate.py         # L1 raw 생성
+│   ├── run_verify_citations.py # L2 MCP 조문 검증
+│   ├── run_partial_refine.py   # A1 부분 재생성 루프
+│   ├── run_curator.py          # Curator 8-stage (하이브리드)
+│   ├── curator_config.yaml
+│   ├── run_guardrails.py       # Guardrails 2-tier (고속 배치)
+│   ├── run_guardrails_llmrails_smoke.py  # LLMRails SDK smoke
+│   ├── guardrails/config.yml · guardrails_sdk/config.yml
+│   ├── run_finalize_train.py   # ChatML 변환
+│   ├── embed_nvidia.py         # NVIDIA Build API 임베딩 래퍼
+│   ├── personas.py · fetch_personas.py
+│   └── validators/             # citation_validator, build_api_cross, drift_detector
+│
+├── training/
+│   └── sft_unsloth.py          # Unsloth LoRA SFT (Nemotron 30B + Qwen 1.5B 공통)
+│
+├── benchmark/
+│   ├── questions.jsonl         # 20문제
+│   ├── run_generate.py         # base/FT 답변 수집
+│   ├── score_judge.py          # 4축 정량 (expected_laws · cross_overlap · L2)
+│   ├── score_qualitative.py    # 정성 (disclaimer · refusal · CoT · citation)
+│   ├── extract_diff_samples.py # Top-K Before/After diff
+│   └── nemo_evaluator_wrap.py  # NeMo Evaluator 스키마 래핑
+│
+├── demo/
+│   ├── nemotron_tool_call.py   # Tool-use CLI
+│   ├── app_toolcall.py         # Tool-use Streamlit 3단계 UI
+│   ├── app_compare.py          # Base vs FT 좌/우 분할 UI (env var로 모델 교체 가능)
+│   ├── ask_compare.sh          # CLI 비교 호출
+│   ├── demo_questions.txt      # 시연 질문 7종
+│   └── record_windows_guide.md # Windows PowerShell 녹화 자동화 가이드
+│
+├── scripts/
+│   ├── launch_vllm.sh          # vLLM 기동
+│   ├── launch_sft_chain.sh     # SFT 2-phase 자동 체인
+│   ├── cluster_personas.py     # k=200 페르소나 클러스터링
+│   ├── nsight_capture.sh       # Nsight 프로파일 캡처
+│   └── ...
+│
+├── artifacts/
+│   ├── nsight/vllm_base_startup.nsys-rep   # Nsight Systems 트레이스
+│   ├── toolcall_smoke_log.md               # Tool-use 4/4 성공 trace
+│   ├── nemoguardrails_llmrails_smoke.json  # LLMRails SDK smoke 결과
+│   ├── guardrails_negative_test.jsonl      # Guardrails negative set
+│   └── guardrails_negative_result*.jsonl   # 5/5 실측
+│
+├── output/                     # 파이프라인 산출물 (raw/verified/refined/curated/safe/final) — gitignore
+├── requirements.txt
+├── README.md                   # (이 파일) 심사 제출용
+├── README_INTERNAL.md          # 팀 내부 브리핑 (초기 계획·타임라인·역할)
+└── 01~22-*.md                  # 단계별 설계·구현·결과 문서 (아래 '문서 목록' 참조)
+```
 
 ---
 
-## 📎 부록
+## 📚 문서 목록 (필수 읽기 순서)
 
-### A. 왜 SFT까지 가는가?
-
-**데이터 생성만 하면 "그래서?"** 라는 질문을 피할 수 없다. SFT Before/After 벤치마크를 보여주면:
-
-1. **데이터 품질의 객관적 증명** — "우리 데이터로 학습하면 모델이 실제로 좋아진다"
-2. **End-to-End 완결성** — NVIDIA 스택 풀루프 증명 (NeMo Framework 추가)
-3. **시각적 임팩트** — 점수 차트 하나로 성과 어필
-
-리스크: SFT 실패 시 발표 구성 깨짐 → **A 담당자 전담 + 백업 플랜 (발표에서 "시도했으나 시간 부족" 솔직히 언급)**.
-> SFT 대상: Nemotron 3 Nano 30B FP8 (LoRA) — NVIDIA 모델로 생성하고, 같은 NVIDIA 모델을 파인튜닝하는 풀루프 전략.
-
-### B. 1박 2일에 현실적인가?
-
-| 작업 | 예상 시간 | 여유 |
-|------|----------|------|
-| Brev + vLLM 세팅 | 2시간 | 🟢 |
-| MCP 시드 수집 | 2시간 | 🟢 |
-| Data Designer 스키마 | 3시간 | 🟢 |
-| 파이프라인 통합 | 4시간 | 🟡 |
-| 500~1000건 생성 | 4시간 (백그라운드) | 🟢 |
-| Guardrails/Curator/MCP verify | 2시간 | 🟡 |
-| SFT 학습 | 6시간 (백그라운드) | 🟢 |
-| 벤치마크 실행 | 2시간 | 🟢 |
-| 발표자료 | 4시간 | 🟡 |
-| **합계 (순차)** | **29시간** | — |
-| **실제 (병렬 활용)** | **~24시간** | **🟢 여유 있음** |
-
-### C. 만약 시간이 남으면
-
-- Multi-turn 대화 형식 데이터 추가 (납세자 ↔ 세무 상담)
-- RAPIDS/cuDF로 대규모 후처리 GPU 가속
-- Guardrails에 PII 스캐너 연결
-- HuggingFace Hub 공개 데이터셋 등록
-
-### D. 만약 시간이 모자라면 (우선순위 하위)
-
-- ❌ SFT 건너뛰고 "생성만" 완수 → 발표 임팩트↓
-- ❌ Guardrails 간소화 (정규식 블랙리스트로 대체)
-- ❌ 4개 세목 → 2개 세목(소득세, 법인세)으로 축소
+| 번호 | 제목 | 역할 |
+|:-:|------|------|
+| **22** | [기술 스택·파이프라인 1페이지 요약](./22-tech-stack-and-pipeline-summary.md) | **제일 먼저** (전체 30분 이해) |
+| **17** | [벤치마크 리포트 (정량·정성)](./17-benchmark-report-and-analysis.md) | 실측 수치 근거 |
+| **21** | [Qwen 1.5B Model Size Ablation](./21-model-size-ablation-qwen15b.md) | 데이터 효과 변수 통제 증명 |
+| **14** | [SFT 스택 교체 (FP8→BF16, HF→Unsloth)](./14-stack-change-sft-unsloth.md) | 학습 기술 의사결정 |
+| **15** | [Guardrails Negative Validation 5/5](./15-guardrails-negative-validation.md) | 안전성 양방향 실증 |
+| **18** | [스택 실구현 vs 계획 매핑](./18-stack-usage-actual-vs-planned.md) | Q&A 방어 |
+| **19** | [Tool-use 라이브 데모 가이드](./19-live-demo-tool-use.md) | 발표 하이라이트 실행 |
+| **16** | [Base vs FT 데모 설계 · 발표자 핸드오프](./16-demo-video-finetuned-vs-base.md) | 데모 2종 설계 |
+| **20** | [발표 경쟁력 평가 + 전략](./20-presentation-competitiveness-strategy.md) | 레버·Go/No-Go·백업 |
+| 12 | [발표 최종 오버뷰 (단일 소스)](./12-presentation-final.md) | 슬라이드 대본 |
+| 13 | [합성 데이터 대표 샘플](./13-sample-outputs.md) | PPT 복붙용 |
+| 10 | [아키텍처 개요 (원 계획)](./10-architecture-overview.md) | 초기 설계 |
+| 11 | [파이프라인 고도화 9종](./11-pipeline-advanced.md) | 구현 상세 |
+| 09 | [5대 레버 상세 설계](./09-pipeline-design-v2.md) | 전략 근거 |
+| 01–08 | 초기 전략·아키텍처·스키마·일정 | 배경 |
 
 ---
 
-**문의/수정**: 이 문서는 팀원 모두가 자유롭게 수정할 수 있습니다. 전략 변경 시 이 파일 업데이트 후 팀 공지.
+## ⚠️ 채점 편향 주의 (Evaluator Bias Disclosure)
+
+1. **L2 `valid_ratio`** 는 **학습 데이터 필터에 사용**했으므로 채점 지표로는 **보조**로만 쓰고, 상승폭을 과대 해석하지 않습니다.
+2. **주 지표**는 (a) 사람 지정 `expected_laws` 커버리지, (b) NVIDIA Build API Super 49B 독립 교차 검증(`cross_overlap`) 입니다.
+3. **정부 DB 기반 hallucination 80→0%, gov.kr 존재 커버리지 35→79.5%** 수치는 **Korean Law MCP(외부 결정론)** 가 매긴 것이며, LLM Judge와 무관합니다.
+
+상세: [문서 17 §1.1](./17-benchmark-report-and-analysis.md), [문서 12 §7-3](./12-presentation-final.md).
+
+---
+
+## 👥 팀 · 라이선스
+
+- **팀**: jerryisgood (회계법인 소속 개발자 4인)
+- **코드 라이선스**: MIT
+- **데이터셋·어댑터 공개**: HuggingFace Hub MIT / CC-BY 검토 중
+- **발표 자료**: `C:\Users\ejeong015\Downloads\jerry_is_good (1) _with_notes.pptx`
+
+### 발표 영상
+
+- **Tool-use 라이브 데모** (Windows 녹화, 가이드 [`demo/record_windows_guide.md`](./demo/record_windows_guide.md))
+- **Base vs Fine-tuned 비교**
+- 최종 편집본은 YouTube unlisted + 본 README 업데이트 예정
+
+### 감사
+
+- NVIDIA Nemotron Developer Hackathon 2026 운영진
+- [nvidia/Nemotron-Personas-Korea](https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea) 공개 데이터
+- Korean Law MCP (`https://korean-law-mcp.fly.dev`) — 법제처 Open API 래퍼
+- Unsloth AI — 단일 H100 Nemotron 3 Nano LoRA SFT 공식 레시피
+
+---
+
+**재현 문의**: GitHub Issues
