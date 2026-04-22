@@ -1,0 +1,44 @@
+{
+  "base": {
+    "tag": "base",
+    "n": 20,
+    "cot_4step_avg": 0.95,
+    "cot_4step_complete_rate": 0.85,
+    "disclaimer_rate": 0.0,
+    "refusal_signal_avg": 0.2,
+    "answer_len_avg": 418.1,
+    "hangul_ratio_avg": 0.6388604569024701,
+    "law_citation_avg": 1.95,
+    "by_semok_cot_4step_avg": {
+      "세법-소득세": 1.0,
+      "세법-법인세": 1.0,
+      "세법-부가가치세": 0.875,
+      "세법-상속증여세": 1.0,
+      "민법-계약임대차": 1.0,
+      "민법-상속증여": 0.8333333333333334,
+      "노동법-임금퇴직금": 0.9166666666666666,
+      "노동법-해고연차": 1.0
+    }
+  },
+  "sft": {
+    "tag": "sft",
+    "n": 20,
+    "cot_4step_avg": 1.0,
+    "cot_4step_complete_rate": 1.0,
+    "disclaimer_rate": 1.0,
+    "refusal_signal_avg": 0.1,
+    "answer_len_avg": 714.4,
+    "hangul_ratio_avg": 0.5826510088644677,
+    "law_citation_avg": 2.4,
+    "by_semok_cot_4step_avg": {
+      "세법-소득세": 1.0,
+      "세법-법인세": 1.0,
+      "세법-부가가치세": 1.0,
+      "세법-상속증여세": 1.0,
+      "민법-계약임대차": 1.0,
+      "민법-상속증여": 1.0,
+      "노동법-임금퇴직금": 1.0,
+      "노동법-해고연차": 1.0
+    }
+  }
+}
