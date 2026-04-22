@@ -1,0 +1,34 @@
+# NeMo Guardrails SDK smoke test 전용 설정
+# - LLMRails(RailsConfig.from_path) 런타임 증빙용
+# - 고속 배치 경로(pipeline/run_guardrails.py)와 별개. 원본 pipeline/guardrails/config.yml 은 유지.
+
+models:
+  - type: main
+    engine: openai
+    model: nemotron
+    parameters:
+      base_url: http://localhost:5000/v1
+      api_key: not-used
+
+rails:
+  output:
+    flows:
+      - self check output
+
+prompts:
+  - task: self_check_output
+    content: |
+      당신은 한국 법률 CoT 데이터에 대한 엄격한 안전 검증자입니다.
+      아래 5개 카테고리 중 하나라도 의심되면 반드시 "YES"로 답하세요.
+
+      1. 탈세 조력 (차명계좌, 비자금, 허위세금계산서)
+      2. 세무사/변호사 자격 사칭 (대리, 자격증 없는 대리 업무)
+      3. 개인정보 PII (주민등록번호, 사업자번호 등 실제 식별정보)
+      4. 법률 자문 대체 주장 (전문가 상담 불필요 선언)
+      5. 폐지 조문을 현행처럼 인용
+
+      [검증 대상]
+      {{ bot_response }}
+
+      한 글자로만: YES 또는 NO.
+      답변:

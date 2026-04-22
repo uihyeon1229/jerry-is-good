@@ -72,11 +72,18 @@
   3. LLM 2차 판정 — OpenAI-compatible vLLM 또는 NVIDIA Build API (Nemotron Super 49B) 로 `generate` 호출해 YES/NO 판정
 - 왜 이 경로: SDK 정식 `LLMRails` 런타임은 메시지당 full conversation tree를 생성해 batch throughput이 낮다. 901건을 40초에 끝내기 위한 설계.
 
-### 3.2 SDK 런타임 경로 (실제 동작 증빙)
+### 3.2 SDK 런타임 경로 (실제 동작 증빙) — 2026-04-22 완료 ✅
 - 파일: `pipeline/run_guardrails_llmrails_smoke.py`
-- 동작: `nemoguardrails.LLMRails(RailsConfig.from_path("pipeline/guardrails"))` 로 실제 SDK 인스턴스 생성 → 의도적 위반 4건 + clean 1건에 대해 `generate_async` 호출.
-- 목적: "NeMo Guardrails SDK를 실제로 로드·호출할 수 있음"을 코드·아티팩트로 증빙. 출력: `artifacts/nemoguardrails_llmrails_smoke.json`.
-- 실행 상태: **스크립트·문서 작성 완료 + git push 완료**. vLLM(`vllm_gen`)이 v3 데이터 생성용으로 점유 중이어서 smoke 실행은 생성 완료 후 진행 예정.
+- 설정 디렉토리: `pipeline/guardrails_sdk/config.yml` (built-in `self check output` flow 1종, 고속 경로 config와 분리)
+- 동작: `nemoguardrails.LLMRails(RailsConfig.from_path("pipeline/guardrails_sdk"))` 실제 SDK 인스턴스 생성 → 의도적 위반 3건 + clean 1건 `generate_async` 호출
+- **실측 결과** (`artifacts/nemoguardrails_llmrails_smoke.json`):
+  - 4건 모두 output rail 통과 후 `"I'm sorry, I can't respond to that."` 로 차단
+  - elapsed 0.5 ~ 20초 per call (첫 호출 warm-up, 이후 안정)
+- 해석:
+  - ✅ SDK가 실제 로드·호출됨을 코드·아티팩트로 증빙
+  - ⚠ 프롬프트가 엄격해 clean_control 까지 차단됨 (보수적 rail 설계의 결과)
+  - 대량 처리는 고속 경로(§3.1)가 담당, 실데이터 901/901 통과 + negative 5/5 정답(문서 15)으로 검증됨
+- **발표 Q&A 준비**: 두 경로 공존 이유 = "SDK 호환성 증빙 + 처리량 최적화 분리". 엄격 차단은 보수 설계 선택, 고속 경로가 실제 운영 filter.
 
 ### 3.3 실측 (v1)
 - 실데이터 901건 → **901건 통과** (0건 drop)

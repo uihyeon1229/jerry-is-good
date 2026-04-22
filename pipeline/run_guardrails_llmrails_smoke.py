@@ -37,7 +37,7 @@ CLEAN_INPUT = "근로소득만 있는 직장인의 종합소득세 신고 의무
 
 
 async def amain() -> None:
-    config_path = os.getenv("GUARDRAILS_CONFIG", "pipeline/guardrails")
+    config_path = os.getenv("GUARDRAILS_CONFIG", "pipeline/guardrails_sdk")
     cfg = RailsConfig.from_path(config_path)
     rails = LLMRails(cfg)
 
